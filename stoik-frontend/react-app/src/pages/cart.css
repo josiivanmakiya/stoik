@@ -1,0 +1,38 @@
+.cart {
+  display: grid;
+  grid-template-columns: 1.1fr 0.7fr;
+  gap: 28px;
+}
+
+.cart__side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.cart__row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  color: var(--ink-muted);
+}
+
+.cart__row strong {
+  color: var(--ink);
+}
+
+.cart__address {
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.cart__link {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 980px) {
+  .cart {
+    grid-template-columns: 1fr;
+  }
+}

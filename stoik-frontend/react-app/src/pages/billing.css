@@ -1,0 +1,14 @@
+.billing-grid {
+  margin-top: 32px;
+}
+
+.billing__row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  color: var(--ink-muted);
+}
+
+.billing__row strong {
+  color: var(--ink);
+}

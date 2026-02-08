@@ -1,0 +1,17 @@
+.credit__quote {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 3px solid var(--ink);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink-muted);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.credit__quote-author {
+  display: block;
+  margin-top: 10px;
+  color: var(--ink);
+  font-style: normal;
+  font-weight: 600;
+}

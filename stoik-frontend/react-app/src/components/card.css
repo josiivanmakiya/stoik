@@ -1,0 +1,22 @@
+.card {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+}
+
+.card__title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.card__subtitle {
+  color: var(--ink-muted);
+  margin: 0 0 16px;
+}
+
+.card__body {
+  color: var(--ink-muted);
+}

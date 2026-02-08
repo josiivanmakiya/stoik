@@ -1,0 +1,29 @@
+.essentials-list {
+  margin-top: 32px;
+  display: grid;
+  gap: 28px;
+}
+
+.essentials-block {
+  padding: 20px 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--stroke);
+  background: var(--panel);
+}
+
+.essentials-block h2 {
+  margin: 0 0 8px;
+  font-family: "Fraunces", serif;
+}
+
+.essentials-block p {
+  margin: 0 0 12px;
+  color: var(--ink-muted);
+}
+
+.essentials-block ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}

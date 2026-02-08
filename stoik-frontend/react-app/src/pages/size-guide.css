@@ -1,0 +1,10 @@
+.size-grid {
+  margin-top: 32px;
+}
+
+.size-guide__cta {
+  display: inline-block;
+  margin-top: 24px;
+  color: var(--ink);
+  text-decoration: underline;
+}

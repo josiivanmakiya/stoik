@@ -1,0 +1,29 @@
+.btn {
+  border: none;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(14, 15, 18, 0.18);
+}
+
+.btn--primary {
+  background: var(--ink);
+  color: white;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+
+.btn--accent {
+  background: var(--accent);
+  color: var(--ink);
+}
