@@ -5,6 +5,7 @@ const { getUserById } = require('../user/user.service.js');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const INVALID_CREDENTIALS_ERROR = 'Invalid email or password';
 
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET is not set');
@@ -53,10 +54,10 @@ const registerUser = async ({ email, password, fullName, phone, address }) => {
 const loginUser = async ({ email, password }) => {
   // Find user by email
   const user = await User.findOne({ email });
-  if (!user) throw new Error('User not found');
+  if (!user) throw new Error(INVALID_CREDENTIALS_ERROR);
 
   const isValidPassword = await bcrypt.compare(password, user.password);
-  if (!isValidPassword) throw new Error('Invalid password');
+  if (!isValidPassword) throw new Error(INVALID_CREDENTIALS_ERROR);
 
   const token = jwt.sign(
     { userId: user._id.toString(), email: user.email },

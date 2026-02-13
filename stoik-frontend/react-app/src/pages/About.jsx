@@ -14,8 +14,8 @@ export default function About() {
         <Card title="The promise" subtitle="Quiet reliability">
           No trend cycles. No excess. Just essentials on a consistent cadence.
         </Card>
-        <Card title="The system" subtitle="Fit, plan, deliver">
-          Measure once, select a plan, and let the loop run in the background.
+        <Card title="The system" subtitle="Fit, cadence, deliver">
+          Measure once, select a cadence, and let the loop run in the background.
         </Card>
       </section>
     </main>

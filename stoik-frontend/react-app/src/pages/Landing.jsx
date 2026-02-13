@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
+import ColorCollectionsNav from '../components/ColorCollectionsNav.jsx';
 import PixelShirts from '../components/PixelShirts.jsx';
 import './landing.css';
 
@@ -16,11 +17,11 @@ export default function Landing() {
             in the best possible way: your basics, always ready.
           </p>
           <div className="hero__actions">
-            <Link to="/plans">
-              <Button>Start subscription</Button>
+            <Link to="/essentials">
+              <Button>Shop essentials</Button>
             </Link>
-            <Link to="/plans">
-              <Button variant="ghost">See plans</Button>
+            <Link to="/essentials">
+              <Button variant="ghost">Browse essentials</Button>
             </Link>
           </div>
           <div className="hero__note">Set it once. Adjust anytime. Quiet confidence, maintained.</div>
@@ -62,11 +63,12 @@ export default function Landing() {
           <div className="eyebrow">How it works</div>
           <h2 className="title">A steady monthly loop.</h2>
           <p className="subtitle">
-            Pick a plan, set your fit, and let Stoik maintain the baseline. No browsing. No reorders.
+            Pick a cadence, set your fit, and let Stoik maintain the baseline. No browsing. No reorders.
           </p>
+          <ColorCollectionsNav className="flow__color-nav" />
         </div>
         <div className="grid grid-3">
-          <Card title="1. Choose cadence" subtitle="Core, Premium, or Enterprise">
+          <Card title="1. Choose cadence" subtitle="Monthly or quarterly">
             Decide how often you want a reset. You can pause or switch anytime.
           </Card>
           <Card title="2. Set your fit" subtitle="One size profile">

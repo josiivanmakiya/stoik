@@ -1,6 +1,8 @@
 const express = require('express');
 const Product = require('../db/models/product.model.js');
 const { authenticateToken, requireAdmin } = require('../domain/auth/auth.middleware.js');
+const { validate, schemas } = require('../middleware/validation.middleware');
+const { sendError } = require('../utils/http');
 
 const router = express.Router();
 
@@ -10,12 +12,17 @@ router.get('/', async (req, res) => {
     const products = await Product.find({ isActive: true });
     res.json(products);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return sendError(res, {
+      status: 500,
+      message: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+      requestId: req.requestId
+    });
   }
 });
 
 // Admin: create product
-router.post('/', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/', authenticateToken, requireAdmin, validate(schemas.productCreate), async (req, res) => {
   const { productId, name, description } = req.body;
   if (!productId || !name) {
     return res.status(400).json({ error: 'Missing required fields: productId, name' });
@@ -28,7 +35,12 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     const product = await Product.create({ productId, name, description });
     res.status(201).json(product);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    return sendError(res, {
+      status: 400,
+      message: 'Invalid product payload',
+      code: 'PRODUCT_CREATE_FAILED',
+      requestId: req.requestId
+    });
   }
 });
 
@@ -43,7 +55,12 @@ router.patch('/:productId/deactivate', authenticateToken, requireAdmin, async (r
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    return sendError(res, {
+      status: 400,
+      message: 'Failed to deactivate product',
+      code: 'PRODUCT_DEACTIVATE_FAILED',
+      requestId: req.requestId
+    });
   }
 });
 

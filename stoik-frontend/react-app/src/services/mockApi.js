@@ -27,39 +27,12 @@ export const mockAuth = {
   }
 };
 
-export const mockPlans = async () => {
-  await delay(320);
-  return [
-    {
-      planId: 'core',
-      name: 'Core',
-      monthlyPrice: 15000,
-      unitsPerMonth: 3,
-      description: 'Three whites monthly. A clean baseline, always ready.'
-    },
-    {
-      planId: 'premium',
-      name: 'Premium',
-      monthlyPrice: 23000,
-      unitsPerMonth: 5,
-      description: 'Five whites monthly. Rotate and refresh without thinking.'
-    },
-    {
-      planId: 'enterprise',
-      name: 'Enterprise',
-      monthlyPrice: 40000,
-      unitsPerMonth: 10,
-      description: 'Ten whites monthly. Full coverage for daily uniform life.'
-    }
-  ];
-};
-
 export const mockSubscriptions = async () => {
   await delay(350);
   return [
     {
       id: 'sub_001',
-      planId: 'core',
+      label: 'Essentials cadence',
       status: 'active',
       nextBillingDate: '2026-03-01'
     }

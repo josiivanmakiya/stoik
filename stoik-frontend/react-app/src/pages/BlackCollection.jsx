@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import Card from '../components/Card.jsx';
+import ColorCollectionsNav from '../components/ColorCollectionsNav.jsx';
 import './collection.css';
 
 export default function BlackCollection() {
@@ -10,7 +11,7 @@ export default function BlackCollection() {
           <div className="eyebrow">Black</div>
           <h1 className="title">Black resets every 4 months.</h1>
           <p className="subtitle">Deep, deliberate, and slow. A measured rotation.</p>
-          <Link to="/plans" className="collection__link">View plans</Link>
+          <Link to="/essentials" className="collection__link">See our other services</Link>
         </div>
         <div className="collection__swatch collection__swatch--black"></div>
       </div>
@@ -19,8 +20,8 @@ export default function BlackCollection() {
         <Card title="Cadence" subtitle="Every 4 months">
           Black ships once per quarter for controlled longevity.
         </Card>
-        <Card title="Use case" subtitle="Low visual noise">
-          Black keeps the silhouette consistent and focused.
+        <Card title="Collections" subtitle="Quick switch">
+          <ColorCollectionsNav className="collection__color-nav" />
         </Card>
       </section>
 

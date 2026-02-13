@@ -16,6 +16,10 @@
   text-decoration: underline;
 }
 
+.collection__color-nav {
+  margin-top: 6px;
+}
+
 .collection__swatch {
   width: 200px;
   height: 200px;

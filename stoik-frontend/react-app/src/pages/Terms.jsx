@@ -10,7 +10,7 @@ export default function Terms() {
 
       <section className="terms-grid">
         <Card title="Billing cadence" subtitle="Monthly renewal">
-          Your plan renews monthly on the date shown at checkout.
+          Your subscription renews monthly on the date shown at checkout.
         </Card>
         <Card title="Cancellation" subtitle="No penalties">
           Cancel anytime before your next billing date.

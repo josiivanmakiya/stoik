@@ -7,6 +7,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "seed:catalog": "node src/scripts/seedCatalog.js",
+    "seed:consumables": "node src/scripts/seedConsumables.js",
     "logs:view": "tail -f logs/stoik-$(date +%Y-%m-%d).log",
     "logs:errors": "tail -f logs/stoik-error-$(date +%Y-%m-%d).log"
   },

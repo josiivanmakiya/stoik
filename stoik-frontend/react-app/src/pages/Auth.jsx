@@ -1,26 +1,53 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/Button.jsx';
-import { login, register } from '../services/auth.api.js';
+import { login, register, startSocialAuth } from '../services/auth.api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import './auth.css';
 
 export default function Auth() {
+  const auth = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState('login');
   const [status, setStatus] = useState('');
   const [form, setForm] = useState({ fullName: '', email: '', password: '' });
+  const fromPath = location.state?.from?.pathname || '/dashboard';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus('Working...');
-    let response;
-    if (mode === 'login') {
-      response = await login({ email: form.email, password: form.password });
-    } else {
-      response = await register({ email: form.email, fullName: form.fullName, password: form.password });
+
+    try {
+      let response;
+      if (mode === 'login') {
+        response = await login({ email: form.email, password: form.password });
+      } else {
+        response = await register({ email: form.email, fullName: form.fullName, password: form.password });
+      }
+
+      auth?.login(response);
+      setStatus('Success. Redirecting...');
+      navigate(fromPath, { replace: true });
+    } catch (error) {
+      setStatus(error.message || 'Authentication failed.');
     }
-    localStorage.setItem('stoik_token', response.token);
-    localStorage.setItem('stoik_user', JSON.stringify(response.user));
-    setStatus('Success. Redirect to dashboard (mock).');
+  };
+
+  const handleSocialAuth = async (provider) => {
+    setStatus(`Starting ${provider === 'google' ? 'Google' : 'Apple'} sign-in...`);
+
+    try {
+      const response = await startSocialAuth(provider);
+
+      if (response?.token && response?.user) {
+        auth?.login(response);
+        setStatus('Success. Redirecting...');
+        navigate(fromPath, { replace: true });
+      }
+    } catch (error) {
+      setStatus(error.message || 'Social sign-in failed.');
+    }
   };
 
   return (
@@ -36,6 +63,21 @@ export default function Auth() {
         </div>
         <h1 className="title">{mode === 'login' ? 'Welcome back.' : 'Create your Stoik account.'}</h1>
         <p className="subtitle">We keep it simple and clean. Quiet confidence, just essentials.</p>
+
+        {location.state?.reason === 'auth' && (
+          <div className="auth__status">Please sign in to continue.</div>
+        )}
+
+        <div className="auth__social">
+          <Button type="button" variant="ghost" onClick={() => handleSocialAuth('google')}>
+            Continue with Google
+          </Button>
+          <Button type="button" variant="ghost" onClick={() => handleSocialAuth('apple')}>
+            Continue with Apple
+          </Button>
+        </div>
+
+        <div className="auth__divider">or continue with email</div>
 
         <form onSubmit={handleSubmit} className="auth__form">
           {mode === 'register' && (

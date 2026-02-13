@@ -1,19 +1,30 @@
 const mongoose = require('mongoose');
 
+const PLAN_IDS = ['core', 'premium', 'enterprise'];
+
 const planSchema = new mongoose.Schema({
   planId: {
     type: String,
     required: true,
-    enum: ['core', 'premium', 'enterprise']
+    enum: PLAN_IDS,
+    trim: true,
+    lowercase: true,
+    immutable: true,
+    unique: true
   },
   name: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   monthlyPrice: {
     type: Number,
     required: true,
-    min: 0
+    min: 0,
+    validate: {
+      validator: Number.isFinite,
+      message: 'monthlyPrice must be a finite number'
+    }
   },
   unitsPerMonth: {
     type: Number,
@@ -34,10 +45,16 @@ const planSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  collection: 'plans'
+  collection: 'plans',
+  versionKey: false
 });
 
-planSchema.index({ planId: 1 });
+planSchema.path('includedSkus').validate(function(value) {
+  if (!Array.isArray(value)) return false;
+  const uniqueCount = new Set(value.map((id) => String(id))).size;
+  return uniqueCount === value.length;
+}, 'includedSkus must not contain duplicates');
+
 planSchema.index({ isActive: 1 });
 
 module.exports = mongoose.model('Plan', planSchema);

@@ -11,8 +11,8 @@ export default function Orders() {
       <section className="orders">
         <Card title="March 2026 shipment" subtitle="In transit">
           <div className="orders__row">
-            <span>Plan</span>
-            <strong>Core</strong>
+            <span>Cadence</span>
+            <strong>Monthly</strong>
           </div>
           <div className="orders__row">
             <span>Tracking</span>

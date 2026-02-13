@@ -1,5 +1,6 @@
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const { SECURITY_DEFAULTS } = require('../config/constants.js');
 
 /**
  * Security Middleware Configuration
@@ -28,11 +29,11 @@ const createRateLimit = (windowMs, max, message) => {
   return rateLimit({
     windowMs,
     max,
-    message: {
+    message: () => ({
       error: message,
       code: 'RATE_LIMIT_EXCEEDED',
       timestamp: new Date().toISOString()
-    },
+    }),
     standardHeaders: true,
     legacyHeaders: false
     // Use default key generator (handles IPv6 properly)
@@ -41,20 +42,28 @@ const createRateLimit = (windowMs, max, message) => {
 
 // General API rate limit
 const generalRateLimit = createRateLimit(
-  15 * 60 * 1000, // 15 minutes
-  100, // limit each IP/user to 100 requests per windowMs
+  SECURITY_DEFAULTS.RATE_LIMIT_WINDOW_MS,
+  SECURITY_DEFAULTS.RATE_LIMIT_MAX,
   'Too many requests from this IP/user, please try again later'
 );
 
 // Auth endpoints rate limit (stricter)
 const authRateLimit = createRateLimit(
-  15 * 60 * 1000, // 15 minutes
-  5, // limit each IP to 5 requests per windowMs
+  SECURITY_DEFAULTS.RATE_LIMIT_WINDOW_MS,
+  SECURITY_DEFAULTS.AUTH_RATE_LIMIT_MAX,
   'Too many authentication attempts, please try again later'
+);
+
+// Checkout endpoints rate limit (payment abuse protection)
+const checkoutRateLimit = createRateLimit(
+  SECURITY_DEFAULTS.RATE_LIMIT_WINDOW_MS,
+  SECURITY_DEFAULTS.CHECKOUT_RATE_LIMIT_MAX,
+  'Too many checkout attempts, please try again later'
 );
 
 module.exports = {
   helmetConfig,
   generalRateLimit,
-  authRateLimit
+  authRateLimit,
+  checkoutRateLimit
 };

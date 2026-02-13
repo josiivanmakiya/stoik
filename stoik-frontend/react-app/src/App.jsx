@@ -1,13 +1,13 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import {
   About,
   Auth,
+  Bag,
   Billing,
   BlackCollection,
   Cancel,
   Careers,
-  Cart,
   Checkout,
   Contact,
   Dashboard,
@@ -21,7 +21,6 @@ import {
   Locations,
   NotFound,
   Orders,
-  Plans,
   Press,
   Privacy,
   Profile,
@@ -45,27 +44,27 @@ export default function App() {
         <Route path="/grey" element={<GreyCollection />} />
         <Route path="/black" element={<BlackCollection />} />
         <Route path="/essentials" element={<Essentials />} />
-        <Route path="/plans" element={<Plans />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/fit" element={<FitProfile />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route path="/bag" element={<Bag />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/shipping" element={<Shipping />} />
+        <Route path="/billing" element={<Billing />} />
+        <Route path="/cart" element={<Navigate to="/bag" replace />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/disclosure" element={<Disclosure />} />
         <Route path="/locations" element={<Locations />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/credit" element={<StoikCredit />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/shipping" element={<Shipping />} />
-        <Route path="/billing" element={<Billing />} />
         <Route path="/faq" element={<Faq />} />
         <Route path="/about" element={<About />} />
         <Route path="/press" element={<Press />} />
         <Route path="/careers" element={<Careers />} />
-        <Route path="/checkout" element={<Checkout />} />
         <Route path="/success" element={<Success />} />
         <Route path="/cancel" element={<Cancel />} />
         <Route path="/error" element={<ErrorPage />} />

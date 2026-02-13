@@ -37,10 +37,19 @@ const updateNextBillingDate = async function(subscriptionId, nextBillingDate) {
   return await Subscription.findByIdAndUpdate(subscriptionId, { nextBillingDate }, { new: true });
 };
 
+const updateSubscriptionCadence = async function(subscriptionId, cadenceMonths, nextBillingDate) {
+  return await Subscription.findByIdAndUpdate(
+    subscriptionId,
+    { cadenceMonths, nextBillingDate },
+    { new: true }
+  );
+};
+
 module.exports = {
   createSubscription,
   getSubscriptionById,
   getSubscriptionsByUserId,
   updateSubscriptionStatus,
-  updateNextBillingDate
+  updateNextBillingDate,
+  updateSubscriptionCadence
 };

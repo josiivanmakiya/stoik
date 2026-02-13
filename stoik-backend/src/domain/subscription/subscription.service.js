@@ -4,20 +4,30 @@ const {
   getSubscriptionById,
   updateSubscriptionStatus,
   updateNextBillingDate,
-  getSubscriptionsByUserId
+  getSubscriptionsByUserId,
+  updateSubscriptionCadence
 } = require('./subscription.model.js');
 
 const { assertValidSubscriptionTransition } = require('./subscription.rules.js');
+
+const clampCadence = (cadenceMonths) => {
+  const parsed = Number(cadenceMonths || 1);
+  if (!Number.isFinite(parsed)) return 1;
+  return Math.min(6, Math.max(1, Math.round(parsed)));
+};
 
 const subscribeUser = async function({
   userId,
   planId,
   startDate = new Date(),
-  commitmentMonths = 0
+  commitmentMonths = 0,
+  cadenceMonths = 1,
+  bagSnapshot = []
 }) {
+  const normalizedCadence = clampCadence(cadenceMonths);
   const status = SUBSCRIPTION_STATUS.INACTIVE;
   const nextBillingDate = new Date(startDate);
-  nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+  nextBillingDate.setMonth(nextBillingDate.getMonth() + normalizedCadence);
 
   const commitmentEndDate = commitmentMonths > 0
     ? new Date(startDate.getFullYear(), startDate.getMonth() + commitmentMonths, startDate.getDate())
@@ -28,6 +38,8 @@ const subscribeUser = async function({
   const subscription = await createSubscription({
     userId,
     planId,
+    cadenceMonths: normalizedCadence,
+    bagSnapshot,
     status,
     startDate,
     nextBillingDate,
@@ -74,6 +86,17 @@ const setNextBillingDate = async function(subscriptionId, nextBillingDate) {
   return updateNextBillingDate(subscriptionId, nextBillingDate);
 };
 
+const updateDeliveryFrequency = async function(subscriptionId, cadenceMonths) {
+  const subscription = await getSubscriptionById(subscriptionId);
+  if (!subscription) throw new Error('Subscription not found');
+
+  const normalizedCadence = clampCadence(cadenceMonths);
+  const nextBillingDate = new Date();
+  nextBillingDate.setMonth(nextBillingDate.getMonth() + normalizedCadence);
+
+  return updateSubscriptionCadence(subscriptionId, normalizedCadence, nextBillingDate);
+};
+
 const getSubscription = async function(subscriptionId) {
   return getSubscriptionById(subscriptionId);
 };
@@ -90,6 +113,7 @@ module.exports = {
   resumeSubscription,
   cancelSubscription,
   setNextBillingDate,
+  updateDeliveryFrequency,
   getSubscription,
   getUserSubscriptions
 };

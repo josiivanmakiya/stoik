@@ -1,55 +1,53 @@
 const mongoose = require('mongoose');
 
-const subscriptionSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  planId: {
-    type: String,
-    required: true,
-    enum: ['core', 'premium', 'enterprise'] // Add more plans as needed
-  },
-  status: {
-    type: String,
-    enum: ['inactive', 'active', 'paused', 'cancelled', 'expired'],
-    default: 'inactive',
-    required: true
-  },
-  startDate: {
-    type: Date,
-    default: Date.now,
-    required: true
-  },
-  nextBillingDate: {
-    type: Date,
-    required: true
-  },
-  commitmentEndDate: {
-    type: Date,
-    default: null
-  },
-  priceLocked: {
-    type: Boolean,
-    default: false
-  },
-  cancelledAt: {
-    type: Date,
-    default: null
-  },
-  pauseReason: {
-    type: String,
-    trim: true
-  }
-}, {
-  timestamps: true,
-  collection: 'subscriptions'
-});
+const { SUBSCRIPTION_STATUS } = require('../../config/constants.js');
 
-// Indexes for performance
+const subscriptionSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true
+    },
+    planId: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    cadenceMonths: {
+      type: Number,
+      default: 1,
+      min: 1,
+      max: 6
+    },
+    status: {
+      type: String,
+      enum: Object.values(SUBSCRIPTION_STATUS),
+      default: SUBSCRIPTION_STATUS.INACTIVE,
+      index: true
+    },
+    startDate: {
+      type: Date,
+      default: Date.now
+    },
+    nextBillingDate: { type: Date },
+    commitmentEndDate: { type: Date },
+    priceLocked: { type: Boolean, default: false },
+    bagSnapshot: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    // Optional Paystack metadata for sync/exports
+    planName: { type: String },
+    paystackPlanCode: { type: String, index: true },
+    paystackSubscriptionCode: { type: String, index: true },
+    paystackEmailToken: { type: String },
+    authorizationCode: { type: String },
+    cancelledAt: { type: Date },
+    metadata: { type: mongoose.Schema.Types.Mixed }
+  },
+  { timestamps: true }
+);
+
 subscriptionSchema.index({ userId: 1, status: 1 });
-subscriptionSchema.index({ nextBillingDate: 1, status: 1 });
-subscriptionSchema.index({ status: 1 });
 
-module.exports = mongoose.model('Subscription', subscriptionSchema);
+const Subscription = mongoose.model('Subscription', subscriptionSchema);
+module.exports = Subscription;

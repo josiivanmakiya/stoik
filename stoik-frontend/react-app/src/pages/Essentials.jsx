@@ -1,67 +1,116 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Button from '../components/Button.jsx';
+import { addConsumableToBag, removeFromBag } from '../services/bag.api.js';
+import { getConsumables } from '../services/consumables.api.js';
 import './essentials.css';
 
+const CATEGORY_LABELS = {
+  'personal-care-hygiene': 'Personal Care & Hygiene',
+  'clothing-accessories': 'Clothing & Accessories',
+  'household-cleaning-paper': 'Household Cleaning & Paper',
+  'pet-care': 'Pet Care',
+  'food-kitchen-staples': 'Food & Kitchen Staples',
+  'office-misc': 'Office & Misc Essentials',
+  'luxe-novelty': 'Luxe / Novelty'
+};
+
 export default function Essentials() {
+  const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [selected, setSelected] = useState({});
+  const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    getConsumables()
+      .then((data) => {
+        if (!mounted) return;
+        setItems(Array.isArray(data) ? data : []);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const grouped = useMemo(() => {
+    const map = new Map();
+    items.forEach((item) => {
+      const category = item.category || 'other';
+      if (!map.has(category)) map.set(category, []);
+      map.get(category).push(item);
+    });
+    return Array.from(map.entries());
+  }, [items]);
+
+  const toggleItem = async (item) => {
+    const consumableId = item.consumableId;
+    const nextChecked = !selected[consumableId];
+    setSelected((prev) => ({
+      ...prev,
+      [consumableId]: nextChecked
+    }));
+    if (nextChecked) {
+      await addConsumableToBag(item, 1);
+      setStatus(`${item.name} added to bag.`);
+      navigate('/bag');
+      return;
+    }
+    await removeFromBag(consumableId);
+    setStatus(`${item.name} removed from bag.`);
+  };
+
   return (
     <main className="page fade-in">
       <div className="eyebrow">Essentials</div>
       <h1 className="title">Stoik essentials.</h1>
-      <p className="subtitle">
-        A calm inventory of repeatable daily goods.
-      </p>
+      <p className="subtitle">Select items and add to bag.</p>
+
+      <section className="essentials-toolbar">
+        <Link to="/bag">
+          <Button variant="ghost">Go to bag</Button>
+        </Link>
+      </section>
+      {status ? <p className="essentials-status">{status}</p> : null}
 
       <section className="essentials-list">
-        <div className="essentials-block">
-          <h2>Now</h2>
-          <p>Core basics with predictable wear and easy recycling.</p>
-          <ul>
-            <li><strong>White inner shirts</strong> — Monthly baseline.</li>
-            <li><strong>Grey inner shirts</strong> — Every 4 months.</li>
-            <li><strong>Black inner shirts</strong> — Every 4 months.</li>
-            <li><strong>Plain cotton socks</strong> — Elastic fatigue, fast cycle.</li>
-            <li><strong>Basic cotton underwear</strong> — Hygiene cadence.</li>
-            <li><strong>Cotton pillowcases</strong> — Oil + wash wear.</li>
-            <li><strong>Basic towels + washcloths</strong> — Thinning + staining.</li>
-          </ul>
-        </div>
-
-        <div className="essentials-block">
-          <h2>Next</h2>
-          <p>Home + hygiene essentials with high repeat logic.</p>
-          <ul>
-            <li><strong>Bed sheets</strong> — Sleep reset cadence.</li>
-            <li><strong>Deodorant</strong> — Clinical neutral refill.</li>
-            <li><strong>Oral care</strong> — Brush heads + floss.</li>
-            <li><strong>Basic skincare</strong> — Cleanser, moisturizer, SPF.</li>
-            <li><strong>Shower essentials</strong> — Body wash + bar.</li>
-            <li><strong>Laundry pods</strong> — Measured refills.</li>
-            <li><strong>Hand wash</strong> — Routine restock.</li>
-            <li><strong>Paper towels</strong> — Utility restock.</li>
-            <li><strong>Trash bags</strong> — Predictable cycle.</li>
-            <li><strong>Dish pods</strong> — No-guess replenishment.</li>
-          </ul>
-        </div>
-
-        <div className="essentials-block">
-          <h2>Later</h2>
-          <p>Luxury and comfort upgrades for higher tiers.</p>
-          <ul>
-            <li><strong>Razor blades</strong> — Calm replenishment.</li>
-            <li><strong>Shave balm</strong> — Skin-safe daily care.</li>
-            <li><strong>Fabric shaver</strong> — Extend garment life.</li>
-            <li><strong>Pillow inserts</strong> — Sleep quality refresh.</li>
-            <li><strong>Water filters</strong> — Replace before quality drops.</li>
-            <li><strong>Air filters</strong> — Quiet replacement cycle.</li>
-            <li><strong>Candles</strong> — Low-scent minimal glow.</li>
-            <li><strong>Room spray</strong> — Subtle reset.</li>
-            <li><strong>Bed throws</strong> — Seasonal refresh.</li>
-            <li><strong>Sleep mask</strong> — Elastic fade replacement.</li>
-            <li><strong>Herbal tea</strong> — Evening ritual.</li>
-            <li><strong>Magnesium sachets</strong> — Night routine.</li>
-            <li><strong>Satin pillowcase</strong> — Skin-friendly upgrade.</li>
-            <li><strong>Shoe care</strong> — Wipes + polish.</li>
-            <li><strong>Travel kits</strong> — Ready-to-go essentials.</li>
-          </ul>
-        </div>
+        {loading ? <p>Loading consumables...</p> : null}
+        {!loading && grouped.map(([category, categoryItems]) => (
+          <div key={category} className="essentials-block">
+            <h2>{CATEGORY_LABELS[category] || category}</h2>
+            <div className="essentials-table">
+              <div className="essentials-head">
+                <span>Item</span>
+              </div>
+              {categoryItems.map((item) => (
+                <div key={item.consumableId} className="essentials-row">
+                  <label className="essentials-item">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(selected[item.consumableId])}
+                      onChange={() => { toggleItem(item); }}
+                    />
+                    <svg
+                      className="essentials-icon"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 18 18"
+                      aria-hidden="true"
+                    >
+                      <rect x="1.5" y="1.5" width="15" height="15" rx="3" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                      <path d="M5.2 9.1h7.6M9 5.3v7.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                    </svg>
+                    <span>{item.name}</span>
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </section>
     </main>
   );

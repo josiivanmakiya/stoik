@@ -13,12 +13,73 @@
 .cart__row {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
   margin: 10px 0;
   color: var(--ink-muted);
 }
 
 .cart__row strong {
   color: var(--ink);
+}
+
+.cart__row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart__row > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cart__row input,
+.cart__row select {
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+}
+
+.cart__bags-create {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cart__bags-create input {
+  flex: 1;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+.cart__bag-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.6fr) auto auto auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px dashed var(--stroke);
+}
+
+.cart__bag-row.is-active {
+  color: var(--ink);
+}
+
+.cart__bag-select,
+.cart__bag-subscribe {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cart__bag-meta {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
 }
 
 .cart__address {
@@ -34,5 +95,9 @@
 @media (max-width: 980px) {
   .cart {
     grid-template-columns: 1fr;
+  }
+
+  .cart__bag-row {
+    grid-template-columns: 1fr 1fr;
   }
 }

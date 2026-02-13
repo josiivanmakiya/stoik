@@ -3,6 +3,7 @@ const { validate, schemas } = require('../middleware/validation.middleware');
 const { upsertFitProfile, getFitProfile } = require('../domain/fit/fit.service.js');
 const logger = require('../config/logger');
 const { LOG_ACTIONS } = require('../config/logActions');
+const { sendError } = require('../utils/http');
 
 const router = express.Router();
 
@@ -14,7 +15,12 @@ router.get('/me', async (req, res) => {
     if (!profile) return res.status(404).json({ error: 'Fit profile not found' });
     res.json(profile);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return sendError(res, {
+      status: 500,
+      message: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+      requestId: req.requestId
+    });
   }
 });
 
@@ -26,7 +32,12 @@ router.post('/me', validate(schemas.fitProfile), async (req, res) => {
     logger.info(LOG_ACTIONS.FIT_PROFILE_UPDATED, { userId: profile.userId });
     res.json(profile);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    return sendError(res, {
+      status: 400,
+      message: 'Invalid fit profile payload',
+      code: 'FIT_PROFILE_UPDATE_FAILED',
+      requestId: req.requestId
+    });
   }
 });
 

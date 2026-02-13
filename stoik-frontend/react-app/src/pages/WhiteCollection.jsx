@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import PixelShirts from '../components/PixelShirts.jsx';
 import Card from '../components/Card.jsx';
+import ColorCollectionsNav from '../components/ColorCollectionsNav.jsx';
 import './collection.css';
 
 export default function WhiteCollection() {
@@ -11,7 +12,7 @@ export default function WhiteCollection() {
           <div className="eyebrow">White</div>
           <h1 className="title">White is the baseline.</h1>
           <p className="subtitle">Monthly delivery. Always clean. Always ready.</p>
-          <Link to="/plans" className="collection__link">View plans</Link>
+          <Link to="/essentials" className="collection__link">See our other services</Link>
         </div>
         <PixelShirts width={260} />
       </div>
@@ -20,8 +21,8 @@ export default function WhiteCollection() {
         <Card title="Cadence" subtitle="Monthly">
           White ships every month as the core Stoik uniform.
         </Card>
-        <Card title="Fabric" subtitle="Daily wear">
-          Soft, durable, breathable. Built for rotation.
+        <Card title="Collections" subtitle="Quick switch">
+          <ColorCollectionsNav className="collection__color-nav" />
         </Card>
       </section>
     </main>

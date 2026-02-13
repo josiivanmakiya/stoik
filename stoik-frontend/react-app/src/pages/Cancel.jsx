@@ -8,7 +8,7 @@ export default function Cancel() {
         <div className="eyebrow">Cancel</div>
         <h1 className="title">Subscription cancelled.</h1>
         <p className="subtitle">You will not be billed again unless you resubscribe.</p>
-        <Link to="/plans" className="cancel__link">Choose a plan</Link>
+        <Link to="/essentials" className="cancel__link">Browse essentials</Link>
       </div>
     </main>
   );

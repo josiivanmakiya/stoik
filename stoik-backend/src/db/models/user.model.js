@@ -8,6 +8,15 @@ const addressSchema = new mongoose.Schema({
   country: { type: String, required: true }
 }, { _id: false });
 
+const paymentMethodSchema = new mongoose.Schema({
+  provider: { type: String, required: true },
+  brand: { type: String, required: true },
+  last4: { type: String, required: true },
+  expMonth: { type: Number, required: true, min: 1, max: 12 },
+  expYear: { type: Number, required: true },
+  providerRef: { type: String }
+}, { _id: false });
+
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -31,6 +40,8 @@ const userSchema = new mongoose.Schema({
     trim: true
   },
   address: addressSchema,
+  billingAddress: addressSchema,
+  paymentMethod: paymentMethodSchema,
   role: {
     type: String,
     enum: ['user', 'admin'],
