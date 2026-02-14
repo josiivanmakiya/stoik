@@ -88,24 +88,38 @@ export default function Essentials() {
               </div>
               {categoryItems.map((item) => (
                 <div key={item.consumableId} className="essentials-row">
-                  <label className="essentials-item">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(selected[item.consumableId])}
-                      onChange={() => { toggleItem(item); }}
-                    />
-                    <svg
-                      className="essentials-icon"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 18 18"
-                      aria-hidden="true"
+                  <div className="essentials-item-row">
+                    <label className="essentials-item">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(selected[item.consumableId])}
+                        onChange={() => { toggleItem(item); }}
+                      />
+                      <svg
+                        className="essentials-icon"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 18 18"
+                        aria-hidden="true"
+                      >
+                        <rect x="1.5" y="1.5" width="15" height="15" rx="3" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                        <path d="M5.2 9.1h7.6M9 5.3v7.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                      </svg>
+                      <span>{item.name}</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="essentials-info"
+                      aria-label={`What ${item.name} does`}
                     >
-                      <rect x="1.5" y="1.5" width="15" height="15" rx="3" fill="none" stroke="currentColor" strokeWidth="1.2" />
-                      <path d="M5.2 9.1h7.6M9 5.3v7.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                    </svg>
-                    <span>{item.name}</span>
-                  </label>
+                      i
+                      <span className="essentials-tooltip" role="tooltip">
+                        {Boolean(selected[item.consumableId])
+                          ? 'Click to remove this essential from your bag.'
+                          : 'Click to add this essential to your bag.'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

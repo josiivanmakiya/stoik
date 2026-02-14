@@ -1,6 +1,15 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 
 const AuthContext = createContext(null);
+const PREVIEW_AUTH = (import.meta.env.VITE_PREVIEW_AUTH || 'false') === 'true';
+const PREVIEW_USER = {
+  id: '000000000000000000000001',
+  _id: '000000000000000000000001',
+  email: 'preview@stoik.local',
+  fullName: 'Preview User',
+  role: 'admin',
+  status: 'active'
+};
 
 const readStoredUser = () => {
   try {
@@ -11,8 +20,8 @@ const readStoredUser = () => {
 };
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem('stoik_token'));
-  const [user, setUser] = useState(() => readStoredUser());
+  const [token, setToken] = useState(() => localStorage.getItem('stoik_token') || (PREVIEW_AUTH ? 'preview-token' : null));
+  const [user, setUser] = useState(() => readStoredUser() || (PREVIEW_AUTH ? PREVIEW_USER : null));
 
   const login = (payload) => {
     localStorage.setItem('stoik_token', payload.token);
@@ -24,8 +33,8 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem('stoik_token');
     localStorage.removeItem('stoik_user');
-    setToken(null);
-    setUser(null);
+    setToken(PREVIEW_AUTH ? 'preview-token' : null);
+    setUser(PREVIEW_AUTH ? PREVIEW_USER : null);
   };
 
   const value = useMemo(() => ({ token, user, login, logout }), [token, user]);

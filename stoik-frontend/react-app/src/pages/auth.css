@@ -68,6 +68,15 @@
   font-size: 1rem;
 }
 
+.auth__form .auth__input-error {
+  border-color: #b73a3a;
+}
+
+.auth__error {
+  font-size: var(--text-sm);
+  color: #a22424;
+}
+
 .auth__status {
   margin-top: 14px;
   color: var(--ink-soft);

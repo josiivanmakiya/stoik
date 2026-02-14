@@ -36,3 +36,4 @@ npm run dev
   `stoik-frontend/react-app/.env`.
 - Key routes are in `stoik-frontend/react-app/src/App.jsx`.
 - Backend logs are wired to `stoik-backend/src/config/logActions.js`.
+- For dev preview without real auth, set `VITE_PREVIEW_AUTH=true` (frontend) and `AUTH_BYPASS=true` (backend). Never enable auth bypass in production.
