@@ -1,4 +1,5 @@
 const Plan = require('../../db/models/plan.model.js');
+const { normalizeColor, assertValidColorQuantity } = require('./planRules.js');
 
 const normalizePlanId = function(planId) {
   return String(planId || '').trim().toLowerCase();
@@ -12,18 +13,24 @@ const getAllPlans = async function() {
   return await Plan.find({ isActive: true });
 };
 
-const createPlan = async function({ planId, name, monthlyPrice, unitsPerMonth, description, includedSkus }) {
+const createPlan = async function({ planId, name, color, monthlyQuantity, monthlyPrice, unitsPerMonth, description, includedSkus }) {
   const normalizedPlanId = normalizePlanId(planId);
   const existingPlan = await Plan.findOne({ planId: normalizedPlanId });
   if (existingPlan) {
     throw new Error('Plan already exists');
   }
 
+  const normalizedColor = normalizeColor(color);
+  const normalizedQuantity = Number(monthlyQuantity || unitsPerMonth || 0);
+  assertValidColorQuantity(normalizedColor, normalizedQuantity, 'plan configuration');
+
   const plan = new Plan({
     planId: normalizedPlanId,
     name,
+    color: normalizedColor,
+    monthlyQuantity: normalizedQuantity,
     monthlyPrice,
-    unitsPerMonth: unitsPerMonth || 1,
+    unitsPerMonth: normalizedQuantity,
     description: description || '',
     includedSkus: Array.isArray(includedSkus) ? includedSkus : []
   });

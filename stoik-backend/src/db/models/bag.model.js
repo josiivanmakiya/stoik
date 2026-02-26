@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const bagItemSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['plan', 'consumable'],
+    enum: ['plan'],
     default: 'plan'
   },
   itemRef: {
@@ -12,10 +12,6 @@ const bagItemSchema = new mongoose.Schema({
     trim: true
   },
   planId: {
-    type: String,
-    required: false
-  },
-  consumableId: {
     type: String,
     required: false
   },

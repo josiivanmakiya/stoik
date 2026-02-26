@@ -1,13 +1,11 @@
-import pixelShirts from '../assets/pixel-shirts.svg';
+import './pixel-shirts.css';
 
-export default function PixelShirts({ width = 320 }) {
+export default function PixelShirts() {
   return (
-    <img
-      src={pixelShirts}
-      width={width}
-      height={Math.round((width * 200) / 320)}
-      alt="Pixel shirts in white, grey, and black"
-      style={{ display: 'block', maxWidth: '100%' }}
-    />
+    <div className="pixel-shirts" role="img" aria-label="Fanned shirts in black, grey, and white">
+      <div className="pixel-shirts__layer pixel-shirts__layer--black" />
+      <div className="pixel-shirts__layer pixel-shirts__layer--grey" />
+      <div className="pixel-shirts__layer pixel-shirts__layer--white" />
+    </div>
   );
 }

@@ -7,9 +7,9 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "seed:catalog": "node src/scripts/seedCatalog.js",
-    "seed:consumables": "node src/scripts/seedConsumables.js",
-    "logs:view": "tail -f logs/stoik-$(date +%Y-%m-%d).log",
-    "logs:errors": "tail -f logs/stoik-error-$(date +%Y-%m-%d).log"
+    "check:syntax": "node src/scripts/checkSyntax.js",
+    "logs:view": "powershell -Command \"Get-Content -Path (\\\"logs/stoik-\\\" + (Get-Date -Format yyyy-MM-dd) + \".log\\\") -Wait\"",
+    "logs:errors": "powershell -Command \"Get-Content -Path (\\\"logs/stoik-error-\\\" + (Get-Date -Format yyyy-MM-dd) + \".log\\\") -Wait\""
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

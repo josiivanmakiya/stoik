@@ -2,37 +2,29 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
-import PixelShirts from '../components/PixelShirts.jsx';
-import {
-  createNamedBag,
-  deleteBag,
-  getBag,
-  getBagCollections,
-  getBagMonthlyEquivalentTotal,
-  getBagTotal,
-  removeFromBag,
-  renameBag,
-  switchActiveBag,
-  toggleBagSubscription,
-  updateBagItem,
-  updateBagItemCadence
-} from '../services/bag.api.js';
+import { clearBag, getBag, getBagTotal, removeFromBag, setBag as saveBag } from '../services/bag.api.js';
 import './cart.css';
 
-const formatCurrency = (value) => `₦${Number(value || 0).toLocaleString()}`;
+const formatCurrency = (value) => `₦${Number(value || 0).toLocaleString('en-NG')}`;
+const ALLOWED_COLORS = new Set(['white', 'black', 'grey']);
 
-const getItemRef = (item) => item.itemRef || item.consumableId;
+const getItemRef = (item) => item.itemRef || item.planId;
 
 export default function Bag() {
-  const [bag, setBag] = useState({ items: [], cadenceMonths: 1, name: 'My Bag', bagId: '' });
-  const [bagsState, setBagsState] = useState({ bags: [], activeBagId: '', selectedBagIds: [] });
+  const [bag, setBagState] = useState({ items: [], cadenceMonths: 1 });
   const [loading, setLoading] = useState(true);
-  const [newBagName, setNewBagName] = useState('');
 
   const refresh = async () => {
-    const [active, collections] = await Promise.all([getBag(), getBagCollections()]);
-    setBag(active);
-    setBagsState(collections);
+    const activeBag = await getBag();
+    const cleanItems = (activeBag.items || []).filter((item) => ALLOWED_COLORS.has(item.color));
+
+    if (cleanItems.length !== (activeBag.items || []).length) {
+      const cleanedBag = await saveBag(cleanItems, activeBag.cadenceMonths || 1);
+      setBagState(cleanedBag);
+    } else {
+      setBagState(activeBag);
+    }
+
     setLoading(false);
   };
 
@@ -40,174 +32,97 @@ export default function Bag() {
     refresh();
   }, []);
 
-  const total = getBagTotal(bag);
-  const monthlyEquivalent = getBagMonthlyEquivalentTotal(bag);
-  const hasItems = bag.items && bag.items.length > 0;
-  const selectedSet = useMemo(() => new Set(bagsState.selectedBagIds || []), [bagsState.selectedBagIds]);
-  const selectedBags = (bagsState.bags || []).filter((entry) => selectedSet.has(entry.bagId));
-  const selectedItemsCount = selectedBags.reduce((count, entry) => count + (entry.items?.length || 0), 0);
+  const hasItems = (bag.items || []).length > 0;
+  const total = useMemo(() => getBagTotal(bag), [bag]);
 
   const handleRemove = async (ref) => {
     await removeFromBag(ref);
     refresh();
   };
 
-  const handleQuantity = async (ref, quantity) => {
-    await updateBagItem(ref, quantity);
+  const handleQuantity = async (ref, value) => {
+    const parsed = Number(value);
+    const quantity = Number.isFinite(parsed) ? Math.min(99, Math.max(1, Math.round(parsed))) : 1;
+    const nextItems = (bag.items || []).map((item) => {
+      const currentRef = getItemRef(item);
+      if (currentRef !== ref) return item;
+      return { ...item, quantity };
+    });
+    await saveBag(nextItems, bag.cadenceMonths || 1);
     refresh();
   };
 
-  const handleItemCadence = async (ref, cadenceMonths) => {
-    await updateBagItemCadence(ref, cadenceMonths);
-    refresh();
-  };
-
-  const handleCreateBag = async () => {
-    await createNamedBag(newBagName);
-    setNewBagName('');
-    refresh();
-  };
-
-  const handleSwitchBag = async (bagId) => {
-    await switchActiveBag(bagId);
-    refresh();
-  };
-
-  const handleRenameBag = async (entry) => {
-    const nextName = window.prompt('Name this bag', entry.name || 'My Bag');
-    if (!nextName || !nextName.trim()) return;
-    await renameBag(entry.bagId, nextName.trim());
-    refresh();
-  };
-
-  const handleDeleteBag = async (bagId) => {
-    await deleteBag(bagId);
-    refresh();
-  };
-
-  const handleToggleSubscribe = async (bagId, checked) => {
-    await toggleBagSubscription(bagId, checked);
+  const handleClear = async () => {
+    await clearBag();
     refresh();
   };
 
   return (
     <main className="page fade-in cart">
-      <div>
+      <section>
         <div className="eyebrow">Bag</div>
-        <h1 className="title">Save as many named bags as you want.</h1>
-        <p className="subtitle">No payment required to save. Pick one or many bags later to subscribe.</p>
+        <h1 className="title">Black. White. Grey.</h1>
+        <p className="subtitle">Only STOIK undershirts in your bag.</p>
 
-        <Card title="My bags" subtitle="Create, name, and choose subscription bags">
-          <div className="cart__bags-create">
-            <input
-              type="text"
-              placeholder="New bag name"
-              value={newBagName}
-              onChange={(event) => setNewBagName(event.target.value)}
-            />
-            <Button type="button" onClick={handleCreateBag}>Create bag</Button>
-          </div>
+        <Card title="Your bag items" subtitle="Minimal drop only">
+          {loading ? <div className="cart__row">Loading bag...</div> : null}
 
-          {(bagsState.bags || []).map((entry) => (
-            <div className={`cart__bag-row ${entry.bagId === bagsState.activeBagId ? 'is-active' : ''}`} key={entry.bagId}>
-              <label className="cart__bag-select">
-                <input
-                  type="radio"
-                  name="activeBag"
-                  checked={entry.bagId === bagsState.activeBagId}
-                  onChange={() => handleSwitchBag(entry.bagId)}
-                />
-                <span>{entry.name}</span>
-              </label>
-              <span className="cart__bag-meta">{entry.items?.length || 0} item(s)</span>
-              <label className="cart__bag-subscribe">
-                <input
-                  type="checkbox"
-                  checked={selectedSet.has(entry.bagId)}
-                  onChange={(event) => handleToggleSubscribe(entry.bagId, event.target.checked)}
-                />
-                <span>Subscribe</span>
-              </label>
-              <button type="button" onClick={() => handleRenameBag(entry)}>Rename</button>
-              <button type="button" onClick={() => handleDeleteBag(entry.bagId)}>Delete</button>
+          {!loading && !hasItems ? (
+            <div className="cart__empty">
+              <p>Your bag is empty.</p>
+              <Link to="/shop" className="cart__link">Go to shop</Link>
             </div>
-          ))}
-        </Card>
+          ) : null}
 
-        <Card title={`Active bag: ${bag.name || 'My Bag'}`} subtitle="Subscription items">
-          {loading && <div className="cart__row">Loading bag...</div>}
-          {!loading && !hasItems && (
-            <div className="cart__row">
-              <span>Your bag is empty.</span>
-              <Link to="/essentials" className="cart__link">Browse essentials</Link>
-            </div>
-          )}
-          {!loading && hasItems && bag.items.map((item) => {
-            const ref = getItemRef(item);
-            return (
-              <div key={ref} className="cart__row">
-                <span>{item.name}</span>
-                <strong>{formatCurrency(item.unitPrice * item.quantity)}</strong>
-                <div>
-                  <label>
-                    Qty
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(event) => handleQuantity(ref, event.target.value)}
-                    />
-                  </label>
-                  <label>
-                    Every
-                    <select
-                      value={item.cadenceMonths || 1}
-                      onChange={(event) => handleItemCadence(ref, event.target.value)}
-                    >
-                      <option value="1">1 month</option>
-                      <option value="2">2 months</option>
-                      <option value="3">3 months</option>
-                      <option value="4">4 months</option>
-                      <option value="5">5 months</option>
-                      <option value="6">6 months</option>
-                    </select>
-                  </label>
-                  <button type="button" onClick={() => handleRemove(ref)}>
-                    Remove
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-          {hasItems && (
-            <>
-              <div className="cart__row">
-                <span>Next box total</span>
-                <strong>{formatCurrency(total)}</strong>
-              </div>
-              <div className="cart__row">
-                <span>Monthly equivalent</span>
-                <strong>{formatCurrency(monthlyEquivalent)}</strong>
-              </div>
-            </>
-          )}
+          {!loading && hasItems
+            ? bag.items.map((item) => {
+                const ref = getItemRef(item);
+                return (
+                  <article className="cart__item" key={ref}>
+                    <div className={`cart__chip cart__chip--${item.color || 'grey'}`} />
+                    <div>
+                      <p className="cart__item-name">{item.name}</p>
+                      <p className="cart__item-meta">Undershirt</p>
+                    </div>
+                    <div className="cart__qty">
+                      <label htmlFor={`qty-${ref}`}>Qty</label>
+                      <input
+                        id={`qty-${ref}`}
+                        type="number"
+                        min="1"
+                        max="99"
+                        value={item.quantity || 1}
+                        onChange={(event) => handleQuantity(ref, event.target.value)}
+                      />
+                    </div>
+                    <strong>{formatCurrency((item.unitPrice || 0) * (item.quantity || 1))}</strong>
+                    <button type="button" onClick={() => handleRemove(ref)}>Remove</button>
+                  </article>
+                );
+              })
+            : null}
         </Card>
-      </div>
+      </section>
 
       <aside className="cart__side">
-        <PixelShirts width={260} />
-        <Card title="Subscription selection" subtitle="You can subscribe one bag or all">
-          <div className="cart__address">
-            {selectedBags.length} bag(s) selected with {selectedItemsCount} total item(s).
+        <Card title="Order total" subtitle="Three-color essentials">
+          <div className="cart__summary-row">
+            <span>Items</span>
+            <strong>{(bag.items || []).length}</strong>
+          </div>
+          <div className="cart__summary-row">
+            <span>Total</span>
+            <strong>{formatCurrency(total)}</strong>
           </div>
         </Card>
-        <Link to="/checkout?mode=once">
-          <Button variant="ghost" disabled={selectedItemsCount < 1}>Buy once</Button>
-        </Link>
+
         <Link to="/checkout">
-          <Button disabled={selectedItemsCount < 1}>Continue to checkout</Button>
+          <Button disabled={!hasItems}>Checkout</Button>
         </Link>
-        <Link to="/essentials" className="cart__link">Back to essentials</Link>
+        <Button type="button" variant="ghost" onClick={handleClear} disabled={!hasItems}>
+          Clear Bag
+        </Button>
+        <Link to="/shop" className="cart__link">Back to shop</Link>
       </aside>
     </main>
   );

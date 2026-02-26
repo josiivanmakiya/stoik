@@ -1,4 +1,3 @@
-import { USE_MOCK } from './config.js';
 import { apiRequest } from './apiClient.js';
 
 const LEGACY_BAG_KEY = 'stoik_bag';
@@ -12,8 +11,13 @@ const normalizeCadence = (value) => {
   return Math.min(6, Math.max(1, Math.round(parsed)));
 };
 
-const itemRef = (item) => item.itemRef || item.consumableId;
-const itemCadence = (item) => normalizeCadence(item?.cadenceMonths || item?.defaultCadenceMonths || 1);
+const itemRef = (item) => item.itemRef || item.planId;
+const itemCadence = (item) => normalizeCadence(item?.cadenceMonths || 1);
+const itemQuantity = (item) => {
+  const parsed = Number(item?.quantity || 1);
+  if (!Number.isFinite(parsed)) return 1;
+  return Math.min(99, Math.max(1, Math.round(parsed)));
+};
 
 const emptyBag = (name = 'My Bag') => ({
   bagId: makeBagId(),
@@ -30,7 +34,8 @@ const normalizeBag = (bag, fallbackName = 'My Bag') => {
   const normalizedItems = items.map((item) => ({
     ...item,
     itemRef: itemRef(item),
-    type: item.type || 'consumable',
+    type: 'plan',
+    quantity: itemQuantity(item),
     cadenceMonths: itemCadence(item)
   }));
 
@@ -238,7 +243,8 @@ export const setBag = async (items, cadenceMonths = 1) => {
   const normalizedItems = (items || []).map((item) => ({
     ...item,
     itemRef: itemRef(item),
-    type: item.type || 'consumable',
+    type: 'plan',
+    quantity: itemQuantity(item),
     cadenceMonths: itemCadence(item)
   }));
 
@@ -249,7 +255,7 @@ export const setBag = async (items, cadenceMonths = 1) => {
     updatedAt: new Date().toISOString()
   }));
 
-  if (!USE_MOCK && localStorage.getItem('stoik_token')) {
+  if (localStorage.getItem('stoik_token')) {
     try {
       await apiRequest('/bag', {
         method: 'PUT',
@@ -261,92 +267,6 @@ export const setBag = async (items, cadenceMonths = 1) => {
   }
 
   return getActiveBagFromState(nextState);
-};
-
-export const addConsumableToBag = async (consumable, quantity = 1) => {
-  if (!consumable?.consumableId) return getBag();
-
-  const active = await getBag();
-  const ref = consumable.consumableId;
-  const nextItems = [...active.items];
-  const index = nextItems.findIndex((item) => itemRef(item) === ref);
-
-  if (index >= 0) {
-    const existing = nextItems[index];
-    nextItems[index] = {
-      ...existing,
-      quantity: Math.max(1, Number(existing.quantity || 1) + Number(quantity || 1))
-    };
-  } else {
-    nextItems.push({
-      type: 'consumable',
-      itemRef: consumable.consumableId,
-      consumableId: consumable.consumableId,
-      name: consumable.name,
-      category: consumable.category,
-      tooltip: consumable.tooltip,
-      unitPrice: consumable.unitPrice,
-      quantity: Math.max(1, Number(quantity) || 1),
-      cadenceMonths: itemCadence(consumable)
-    });
-  }
-
-  return setBag(nextItems, active.cadenceMonths);
-};
-
-export const addManyConsumablesToBag = async (consumables = []) => {
-  const list = (Array.isArray(consumables) ? consumables : []).filter((item) => item?.consumableId);
-  if (!list.length) return getBag();
-
-  const active = await getBag();
-  const nextItems = [...active.items];
-
-  list.forEach((consumable) => {
-    const ref = consumable.consumableId;
-    const index = nextItems.findIndex((item) => itemRef(item) === ref);
-
-    if (index >= 0) {
-      const existing = nextItems[index];
-      nextItems[index] = {
-        ...existing,
-        quantity: Math.max(1, Number(existing.quantity || 1) + 1),
-        cadenceMonths: itemCadence(consumable)
-      };
-      return;
-    }
-
-    nextItems.push({
-      type: 'consumable',
-      itemRef: consumable.consumableId,
-      consumableId: consumable.consumableId,
-      name: consumable.name,
-      category: consumable.category,
-      tooltip: consumable.tooltip,
-      unitPrice: consumable.unitPrice,
-      quantity: 1,
-      cadenceMonths: itemCadence(consumable)
-    });
-  });
-
-  return setBag(nextItems, active.cadenceMonths);
-};
-
-export const updateBagItem = async (ref, quantity) => {
-  const active = await getBag();
-  const normalizedRef = String(ref || '');
-
-  const next = active.items.map((item) => {
-    const currentRef = String(itemRef(item) || '');
-    if (currentRef !== normalizedRef) return item;
-
-    return {
-      ...item,
-      quantity: Math.max(1, Number(quantity) || 1),
-      cadenceMonths: itemCadence(item)
-    };
-  });
-
-  return setBag(next, active.cadenceMonths);
 };
 
 export const updateBagItemCadence = async (ref, cadenceMonths) => {
@@ -404,13 +324,6 @@ export const getBagMonthlyEquivalentTotal = (bag) => {
 };
 
 export const initiateCheckout = async ({ items, cadenceMonths, customer, shipping, paymentMethod = 'card', bags = [] }) => {
-  if (USE_MOCK) {
-    return {
-      authorization_url: '/success?reference=mock_ref_123',
-      reference: 'mock_ref_123',
-      bags
-    };
-  }
   return apiRequest('/checkout/initialize', {
     method: 'POST',
     body: JSON.stringify({ items, cadenceMonths, customer, shipping, paymentMethod, bags })
@@ -418,8 +331,5 @@ export const initiateCheckout = async ({ items, cadenceMonths, customer, shippin
 };
 
 export const verifyCheckout = async (reference) => {
-  if (USE_MOCK) {
-    return { status: 'success', reference };
-  }
   return apiRequest(`/checkout/verify/${reference}`);
 };

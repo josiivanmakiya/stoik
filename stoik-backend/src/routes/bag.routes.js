@@ -1,9 +1,9 @@
 const express = require('express');
 const Bag = require('../db/models/bag.model.js');
 const Plan = require('../db/models/plan.model.js');
-const Consumable = require('../db/models/consumable.model.js');
 const logger = require('../config/logger');
 const { sendError } = require('../utils/http');
+const { getPlanQuantity, isValidColorQuantity } = require('../domain/plans/planRules.js');
 
 const router = express.Router();
 
@@ -18,57 +18,29 @@ const normalizeItems = async (items = []) => {
   const seen = new Set();
 
   for (const raw of items) {
-    if (!raw) continue;
+    if (!raw || !raw.planId) continue;
 
-    const type = raw.type === 'consumable' || raw.consumableId ? 'consumable' : 'plan';
-
-    if (type === 'plan') {
-      if (!raw.planId) continue;
-
-      const key = `plan:${raw.planId}`;
-      if (seen.has(key)) continue;
-
-      const plan = await Plan.findOne({ planId: raw.planId, isActive: true });
-      if (!plan) continue;
-
-      const quantity = Math.max(1, Math.min(99, Number(raw.quantity) || 1));
-
-      normalized.push({
-        type: 'plan',
-        itemRef: plan.planId,
-        planId: plan.planId,
-        name: plan.name,
-        unitPrice: plan.monthlyPrice,
-        quantity,
-        cadenceMonths: clampCadence(raw.cadenceMonths || 1),
-        unitsPerMonth: plan.unitsPerMonth
-      });
-      seen.add(key);
-      continue;
-    }
-
-    if (!raw.consumableId) continue;
-
-    const key = `consumable:${raw.consumableId}`;
+    const key = `plan:${raw.planId}`;
     if (seen.has(key)) continue;
 
-    const consumable = await Consumable.findOne({ consumableId: raw.consumableId, isActive: true });
-    if (!consumable) continue;
+    const plan = await Plan.findOne({ planId: raw.planId, isActive: true });
+    if (!plan) continue;
 
-    const quantity = Math.max(1, Math.min(99, Number(raw.quantity) || 1));
+    const monthlyQuantity = getPlanQuantity(plan);
+    if (!isValidColorQuantity(plan.color, monthlyQuantity)) continue;
 
     normalized.push({
-      type: 'consumable',
-      itemRef: consumable.consumableId,
-      consumableId: consumable.consumableId,
-      name: consumable.name,
-      category: consumable.category,
-      tooltip: consumable.tooltip,
-      unitPrice: consumable.unitPrice,
-      quantity,
-      cadenceMonths: clampCadence(raw.cadenceMonths || consumable.defaultCadenceMonths || 1),
-      unitsPerMonth: Math.max(1, Math.round(quantity / consumable.defaultCadenceMonths) || 1)
+      type: 'plan',
+      itemRef: plan.planId,
+      planId: plan.planId,
+      name: plan.name,
+      color: plan.color,
+      unitPrice: plan.monthlyPrice,
+      quantity: 1,
+      cadenceMonths: clampCadence(raw.cadenceMonths || 1),
+      unitsPerMonth: monthlyQuantity
     });
+
     seen.add(key);
   }
 

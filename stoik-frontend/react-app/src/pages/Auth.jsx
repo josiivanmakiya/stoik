@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/Button.jsx';
-import { login, register as registerAccount, startSocialAuth } from '../services/auth.api.js';
+import { login, register as registerAccount } from '../services/auth.api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import './auth.css';
 
@@ -12,9 +12,9 @@ export default function Auth() {
   const auth = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState(location.state?.mode === 'register' ? 'register' : 'login');
   const [status, setStatus] = useState('');
-  const fromPath = location.state?.from?.pathname || '/dashboard';
+  const fromPath = location.state?.from?.pathname || '/bag';
 
   const {
     register,
@@ -32,26 +32,20 @@ export default function Auth() {
 
   useEffect(() => {
     setStatus('');
-    reset((values) => ({
-      ...values,
-      password: ''
-    }));
+    reset((values) => ({ ...values, password: '' }));
   }, [mode, reset]);
 
   const onSubmit = async (values) => {
     setStatus('Working...');
 
     try {
-      let response;
-      if (mode === 'login') {
-        response = await login({ email: values.email, password: values.password });
-      } else {
-        response = await registerAccount({
-          email: values.email,
-          fullName: values.fullName,
-          password: values.password
-        });
-      }
+      const response = mode === 'login'
+        ? await login({ email: values.email, password: values.password })
+        : await registerAccount({
+            email: values.email,
+            fullName: values.fullName,
+            password: values.password
+          });
 
       auth?.login(response);
       setStatus('Success. Redirecting...');
@@ -61,50 +55,13 @@ export default function Auth() {
     }
   };
 
-  const handleSocialAuth = async (provider) => {
-    setStatus(`Starting ${provider === 'google' ? 'Google' : 'Apple'} sign-in...`);
-
-    try {
-      const response = await startSocialAuth(provider);
-
-      if (response?.token && response?.user) {
-        auth?.login(response);
-        setStatus('Success. Redirecting...');
-        navigate(fromPath, { replace: true });
-      }
-    } catch (error) {
-      setStatus(error.message || 'Social sign-in failed.');
-    }
-  };
-
   return (
     <main className="page auth fade-in">
-      <div className="auth__panel">
-        <div className="auth__switch">
-          <button type="button" onClick={() => setMode('login')} className={mode === 'login' ? 'active' : ''}>
-            Sign in
-          </button>
-          <button type="button" onClick={() => setMode('register')} className={mode === 'register' ? 'active' : ''}>
-            Create account
-          </button>
-        </div>
-        <h1 className="title">{mode === 'login' ? 'Welcome back.' : 'Create your Stoik account.'}</h1>
-        <p className="subtitle">We keep it simple and clean. Quiet confidence, just essentials.</p>
-
-        {location.state?.reason === 'auth' && (
-          <div className="auth__status">Please sign in to continue.</div>
-        )}
-
-        <div className="auth__social">
-          <Button type="button" variant="ghost" onClick={() => handleSocialAuth('google')}>
-            Continue with Google
-          </Button>
-          <Button type="button" variant="ghost" onClick={() => handleSocialAuth('apple')}>
-            Continue with Apple
-          </Button>
-        </div>
-
-        <div className="auth__divider">or continue with email</div>
+      <section className="auth__card">
+        <h1 className="auth__title">{mode === 'login' ? 'Login' : 'Create account'}</h1>
+        <p className="auth__subtitle">
+          {mode === 'login' ? 'Sign in to your Stoik account.' : 'Create your Stoik account in seconds.'}
+        </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="auth__form" noValidate>
           {mode === 'register' && (
@@ -122,6 +79,7 @@ export default function Auth() {
               {errors.fullName && <span className="auth__error">{errors.fullName.message}</span>}
             </label>
           )}
+
           <label>
             Email
             <input
@@ -137,6 +95,7 @@ export default function Auth() {
             />
             {errors.email && <span className="auth__error">{errors.email.message}</span>}
           </label>
+
           <label>
             Password
             <input
@@ -144,20 +103,34 @@ export default function Auth() {
               className={errors.password ? 'auth__input-error' : ''}
               {...register('password', {
                 required: 'Password is required.',
-                pattern: {
-                  value: PASSWORD_RULE,
-                  message: 'Use 8+ chars with uppercase, lowercase, and number.'
-                }
+                validate: (value) => (
+                  mode === 'login' || PASSWORD_RULE.test(value) || 'Use 8+ chars with uppercase, lowercase, and number.'
+                )
               })}
             />
             {errors.password && <span className="auth__error">{errors.password.message}</span>}
           </label>
+
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Please wait...' : mode === 'login' ? 'Sign in' : 'Create account'}
+            {isSubmitting ? 'Please wait...' : mode === 'login' ? 'Login' : 'Create account'}
           </Button>
         </form>
 
         {status && <div className="auth__status">{status}</div>}
+
+        <div className="auth__mode-note">
+          {mode === 'login' ? (
+            <>
+              Don&apos;t have an account?{' '}
+              <button type="button" onClick={() => setMode('register')}>Create account</button>
+            </>
+          ) : (
+            <>
+              Already have an account?{' '}
+              <button type="button" onClick={() => setMode('login')}>Login</button>
+            </>
+          )}
+        </div>
 
         <div className="auth__foot">
           <span>By continuing, you agree to our</span>
@@ -165,7 +138,8 @@ export default function Auth() {
           <span>and</span>
           <Link to="/privacy">Privacy</Link>
         </div>
-      </div>
+      </section>
     </main>
   );
 }
+

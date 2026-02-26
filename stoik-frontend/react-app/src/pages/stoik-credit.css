@@ -1,17 +1,56 @@
+.credit-page {
+  position: relative;
+  border-radius: 28px;
+  overflow: hidden;
+  background-image: linear-gradient(115deg, rgba(10, 10, 12, 0.72), rgba(10, 10, 12, 0.36)), url('/images/pexels-backpacker.jpg');
+  background-size: cover;
+  background-position: center;
+  color: #f7f7f8;
+}
+
+.credit-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/firefly-209684-c.png');
+  background-size: 44%;
+  background-position: right -80px top -40px;
+  background-repeat: no-repeat;
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.credit-page__content {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  padding: 8px 0;
+}
+
+.credit-page .eyebrow,
+.credit-page .subtitle {
+  color: rgba(245, 246, 248, 0.86);
+}
+
+.credit-page .title {
+  color: #fff;
+}
+
 .credit__quote {
   margin: 24px 0;
   padding: 18px 22px;
-  border-left: 3px solid var(--ink);
-  background: rgba(255, 255, 255, 0.6);
-  color: var(--ink-muted);
+  border-left: 3px solid rgba(255, 255, 255, 0.84);
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(246, 247, 249, 0.95);
   font-style: italic;
   line-height: 1.6;
+  backdrop-filter: blur(4px);
 }
 
 .credit__quote-author {
   display: block;
   margin-top: 10px;
-  color: var(--ink);
+  color: #ffffff;
   font-style: normal;
   font-weight: 600;
 }

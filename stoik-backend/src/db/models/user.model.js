@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { VERIFICATION_STATUS } = require('../../config/constants.js');
 
 const addressSchema = new mongoose.Schema({
   street: { type: String, required: true },
@@ -51,6 +52,28 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'inactive', 'suspended'],
     default: 'active'
+  },
+  verificationStatus: {
+    type: String,
+    enum: Object.values(VERIFICATION_STATUS),
+    default: VERIFICATION_STATUS.UNVERIFIED
+  },
+  verificationProvider: {
+    type: String,
+    enum: ['nin', 'bvn']
+  },
+  verificationRef: {
+    type: String,
+    trim: true
+  },
+  stoikCreditBalance: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  autoApplyCredits: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true, // Adds createdAt and updatedAt

@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/Button.jsx';
 import { getBag, getSelectedBagsForSubscription, initiateCheckout } from '../services/bag.api.js';
+import { getCreditBalance } from '../services/credits.api.js';
+import { loadBillingPreferences, saveBillingPreferences } from '../services/billingPreferences.js';
 import './checkout.css';
+
+const MEMBER_CREDIT_CAP = 2500;
+const formatNaira = (value) => `₦${Number(value || 0).toLocaleString('en-NG')}`;
 
 export default function Checkout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [bag, setBag] = useState({ items: [], cadenceMonths: 1 });
   const [selectedBags, setSelectedBags] = useState([]);
   const [interval, setInterval] = useState(1);
@@ -13,6 +19,9 @@ export default function Checkout() {
   const [purchaseType, setPurchaseType] = useState('recurring');
   const [status, setStatus] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [vaultBalance, setVaultBalance] = useState(12500);
+  const [billingPrefs, setBillingPrefs] = useState(loadBillingPreferences());
+  const [applyCredit, setApplyCredit] = useState(true);
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -33,10 +42,19 @@ export default function Checkout() {
   });
 
   useEffect(() => {
-    Promise.all([getBag(), getSelectedBagsForSubscription()]).then(([activeBag, pickedBags]) => {
+    Promise.all([getBag(), getSelectedBagsForSubscription(), getCreditBalance()]).then(([activeBag, pickedBags, credit]) => {
       setBag(activeBag);
       setSelectedBags(Array.isArray(pickedBags) ? pickedBags : []);
       setInterval(Number(activeBag?.cadenceMonths) || 1);
+      setVaultBalance(Number(credit?.balance || 0));
+
+      const stored = loadBillingPreferences();
+      const merged = saveBillingPreferences({
+        ...stored,
+        autoApplyCredits: typeof credit?.autoApplyCredits === 'boolean' ? credit.autoApplyCredits : stored.autoApplyCredits
+      });
+      setBillingPrefs(merged);
+      setApplyCredit(merged.autoApplyCredits);
     });
 
     const params = new URLSearchParams(location.search);
@@ -64,6 +82,11 @@ export default function Checkout() {
     Array.isArray(entry?.items) ? entry.items.map((item) => ({ ...item, bagId: entry.bagId })) : []
   ));
   const hasItems = checkoutItems.length > 0;
+  const subtotal = checkoutItems.reduce((sum, item) => sum + (Number(item?.unitPrice || 0) * Number(item?.quantity || 1)), 0);
+  const availableCredit = Math.min(MEMBER_CREDIT_CAP, vaultBalance, subtotal);
+  const appliedCredit = applyCredit ? availableCredit : 0;
+  const totalDue = Math.max(0, subtotal - appliedCredit);
+
   const cardDetailsReady = Boolean(
     form.cardNumber.trim() &&
     form.cardExpiry.trim() &&
@@ -87,6 +110,13 @@ export default function Checkout() {
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSwitchManualApproval = (event) => {
+    event.preventDefault();
+    const next = saveBillingPreferences({ ...billingPrefs, automaticRenewal: false });
+    setBillingPrefs(next);
+    navigate('/billing');
   };
 
   const handleSubmit = async (event) => {
@@ -117,6 +147,12 @@ export default function Checkout() {
           cadenceMonths: interval
         })),
         cadenceMonths: interval,
+        applyCredit,
+        creditToApply: appliedCredit,
+        billingPreferences: {
+          autoApplyCredits: billingPrefs.autoApplyCredits,
+          automaticRenewal: billingPrefs.automaticRenewal
+        },
         bags: checkoutBags.map((entry) => ({
           bagId: entry.bagId,
           name: entry.name,
@@ -361,8 +397,51 @@ export default function Checkout() {
               <input name="zipCode" value={form.zipCode} onChange={handleChange} placeholder="Zip code" />
             </div>
 
+            <section className="checkout-payment-breakdown" aria-label="Pre-payment summary">
+              <div className="checkout-breakdown-row">
+                <span>The Executive Playlist</span>
+                <strong>{formatNaira(subtotal)}</strong>
+              </div>
+              <div className="checkout-breakdown-row checkout-breakdown-row--credit-entry">
+                <span>Available Credit ({formatNaira(availableCredit)})</span>
+                <label className="checkout-credit-check">
+                  <input
+                    type="checkbox"
+                    checked={applyCredit}
+                    onChange={(event) => setApplyCredit(event.target.checked)}
+                  />
+                  <span>Apply to this order</span>
+                </label>
+              </div>
+              <div className="checkout-breakdown-divider" />
+              <div className="checkout-breakdown-row checkout-breakdown-row--credit">
+                <span>Member Credit Applied</span>
+                <strong>-{formatNaira(appliedCredit)}</strong>
+              </div>
+              <p className="checkout-loop-discount">Loop Discount: {formatNaira(appliedCredit)}</p>
+              <p className="checkout-loop-note">
+                {applyCredit
+                  ? 'Refining your next cycle with your Buy-Back credit.'
+                  : 'Buy-Back Value remains reserved in your Vault.'}
+              </p>
+              <div className="checkout-breakdown-row checkout-breakdown-row--due">
+                <span>Total Today</span>
+                <strong>{formatNaira(totalDue)}</strong>
+              </div>
+            </section>
+
+            <section className="checkout-transparency" aria-label="Billing choice">
+              <h4>Your Loop, Your Terms.</h4>
+              <p>
+                Stoik is built for your convenience. While we offer auto-billing for seamless freshness, you can toggle
+                <strong> Manual Approval </strong>
+                in your settings. We&apos;ll simply send you a 24-hour reminder before your next shipment.
+              </p>
+              <a href="/billing" onClick={handleSwitchManualApproval}>Switch to Manual Approval</a>
+            </section>
+
             <Button type="submit" disabled={!canContinue}>
-              {purchaseType === 'once' ? 'Buy once' : 'Continue'}
+              Confirm &amp; Pay
             </Button>
 
             {status ? <p className="checkout-status">{status}</p> : null}
@@ -375,7 +454,7 @@ export default function Checkout() {
 
             <div className="checkout-links">
               <Link to="/bag">Back to bag</Link>
-              <Link to="/essentials">Back to essentials</Link>
+              <Link to="/shop">Back to collections</Link>
             </div>
           </form>
         </section>

@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 const orderItemSchema = new mongoose.Schema({
-  type: { type: String, enum: ['plan', 'consumable'], default: 'plan' },
+  type: { type: String, enum: ['plan'], default: 'plan' },
   itemRef: { type: String, required: true },
   planId: { type: String },
-  consumableId: { type: String },
+  color: { type: String, enum: ['white', 'grey', 'black'] },
   name: { type: String, required: true },
   category: { type: String },
   tooltip: { type: String },

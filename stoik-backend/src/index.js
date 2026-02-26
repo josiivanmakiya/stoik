@@ -30,11 +30,12 @@ const subscriptionsRoutes = require('./routes/subscriptions.routes');
 const fitRoutes = require('./routes/fit.routes');
 const productsRoutes = require('./routes/products.routes');
 const skusRoutes = require('./routes/skus.routes');
-const consumablesRoutes = require('./routes/consumables.routes');
 const bagRoutes = require('./routes/bag.routes');
 const checkoutRoutes = require('./routes/checkout.routes');
 const paystackRoutes = require('./routes/paystack.routes');
 const invoicesRoutes = require('./routes/invoices.routes');
+const creditsRoutes = require('./routes/credits.routes');
+const returnsRoutes = require('./routes/returns.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -124,11 +125,12 @@ app.use(`${API_PREFIX}/subscriptions`, authenticateToken, subscriptionsRoutes);
 app.use(`${API_PREFIX}/fit`, authenticateToken, fitRoutes);
 app.use(`${API_PREFIX}/products`, productsRoutes);
 app.use(`${API_PREFIX}/skus`, skusRoutes);
-app.use(`${API_PREFIX}/consumables`, consumablesRoutes);
 app.use(`${API_PREFIX}/bag`, authenticateToken, bagRoutes);
 app.use(`${API_PREFIX}/checkout`, checkoutRateLimit, optionalAuth, checkoutRoutes);
 app.use(`${API_PREFIX}/paystack`, paystackRoutes);
 app.use(`${API_PREFIX}/invoices`, authenticateToken, invoicesRoutes);
+app.use(`${API_PREFIX}/credits`, authenticateToken, creditsRoutes);
+app.use(`${API_PREFIX}/returns`, authenticateToken, returnsRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -229,3 +231,5 @@ process.on('SIGINT', () => {
 });
 
 startServer();
+
+

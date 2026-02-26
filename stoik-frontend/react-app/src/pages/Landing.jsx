@@ -1,84 +1,78 @@
 import { Link } from 'react-router-dom';
 import Button from '../components/Button.jsx';
-import Card from '../components/Card.jsx';
-import ColorCollectionsNav from '../components/ColorCollectionsNav.jsx';
-import PixelShirts from '../components/PixelShirts.jsx';
 import './landing.css';
 
 export default function Landing() {
   return (
     <main className="page landing fade-in">
-      <section className="hero">
+      <section className="stoik-hero">
         <div>
-          <div className="eyebrow">Stoik Utility</div>
-          <h1 className="title">White innerwear that shows up before you notice it’s gone.</h1>
-          <p className="subtitle">
-            Stoik replaces consumables on a steady, reliable cadence. It delivers quiet confidence
-            in the best possible way: your basics, always ready.
+          <p className="eyebrow">Stoik Utility</p>
+          <h1 className="stoik-hero__title">The Freshness Loop.</h1>
+          <p className="stoik-hero__subtitle">
+            Premium inner shirts for professionals. Pick your palette,
+            set your cadence, and keep your drawer decision-free.
           </p>
-          <div className="hero__actions">
-            <Link to="/essentials">
-              <Button>Shop essentials</Button>
+          <div className="stoik-hero__actions">
+            <Link to="/configure">
+              <Button>Start Your Loop</Button>
             </Link>
-            <Link to="/essentials">
-              <Button variant="ghost">Browse essentials</Button>
+            <Link to="/shop">
+              <Button variant="ghost">View the Palette</Button>
             </Link>
           </div>
-          <div className="hero__note">Set it once. Adjust anytime. Quiet confidence, maintained.</div>
         </div>
-        <div className="hero__panel">
-          <PixelShirts width={300} />
-          <div className="hero__stat">
-            <span>Monthly refresh</span>
-            <strong>1–3 shirts</strong>
-          </div>
-          <div className="hero__stat">
-            <span>Fit confidence</span>
-            <strong>Size profile</strong>
-          </div>
-          <div className="hero__stat">
-            <span>Simple delivery</span>
-            <strong>Always on time</strong>
-          </div>
+
+        <div className="stoik-hero__visual stoik-card">
+          <img className="stoik-hero__photo" src="/images/fulda.jpeg" alt="Stoik hero" />
         </div>
       </section>
 
-      <section className="grid grid-3 section">
-        <Card
-          title="Predictable basics"
-          subtitle="No closet panic. No surprise gaps."
-        >
-          Set it once. Stoik handles the rotation and replenishment without noise.
-        </Card>
-        <Card title="Clean fit data" subtitle="Built for your profile.">
-          A minimal size profile ensures every shipment feels exact.
-        </Card>
-        <Card title="Quiet confidence" subtitle="Utility that feels premium.">
-          You get consistency, not clutter.
-        </Card>
+      <section className="section stoik-cycle">
+        <p className="eyebrow">The 90-Day Cycle</p>
+        <h2 className="stoik-cycle__title">Logistics on autopilot.</h2>
+        <div className="stoik-cycle__grid">
+          <article className="stoik-step">
+            <span>01</span>
+            <h3>Set Selection</h3>
+            <p>Choose your baseline pack. Adjust the ratio anytime.</p>
+          </article>
+          <article className="stoik-step">
+            <span>02</span>
+            <h3>Set Fit</h3>
+            <p>Store your size profile once for every delivery cycle.</p>
+          </article>
+          <article className="stoik-step">
+            <span>03</span>
+            <h3>Earn Credit</h3>
+            <p>Courier pickup for old garments. Credits auto-apply next billing.</p>
+          </article>
+        </div>
       </section>
 
-      <section className="section flow">
-        <div className="flow__intro">
-          <div className="eyebrow">How it works</div>
-          <h2 className="title">A steady monthly loop.</h2>
-          <p className="subtitle">
-            Pick a cadence, set your fit, and let Stoik maintain the baseline. No browsing. No reorders.
-          </p>
-          <ColorCollectionsNav className="flow__color-nav" />
-        </div>
-        <div className="grid grid-3">
-          <Card title="1. Choose cadence" subtitle="Monthly or quarterly">
-            Decide how often you want a reset. You can pause or switch anytime.
-          </Card>
-          <Card title="2. Set your fit" subtitle="One size profile">
-            Add measurements once. We use it for every shipment.
-          </Card>
-          <Card title="3. Receive reliably" subtitle="Just the essentials">
-            Your drawer stays ready without you thinking about it.
-          </Card>
+      <section className="section stoik-vault stoik-card">
+        <p className="stoik-label">Stoik Credits</p>
+        <h2>Trade-in value, visible.</h2>
+        <p className="stoik-muted">
+          Every verified return creates credit for your next charge. No coupon
+          codes. Auto-applied at billing.
+        </p>
+        <div className="stoik-vault__ledger">
+          <div>
+            <span>+ ₦2,000</span>
+            <strong>Recycled 4 White Shirts</strong>
+          </div>
+          <div>
+            <span>+ ₦500</span>
+            <strong>Recycled 1 Grey Shirt</strong>
+          </div>
+          <div>
+            <span>- ₦2,500</span>
+            <strong>Applied to Next 90-Day Loop</strong>
+          </div>
         </div>
       </section>
     </main>
   );
 }
+

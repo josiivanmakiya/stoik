@@ -1,6 +1,8 @@
 const Joi = require('joi');
 const logger = require('../config/logger');
 const { LOG_ACTIONS } = require('../config/logActions');
+const { STOIK_COLORS, STOIK_SIZES } = require('../config/constants.js');
+const { isValidColorQuantity, getAllowedQuantities } = require('../domain/plans/planRules.js');
 
 /**
  * Validation Middleware Factory
@@ -76,8 +78,7 @@ const loginSchema = Joi.object({
 });
 
 const subscriptionSchema = Joi.object({
-  planId: Joi.string().valid('core', 'premium', 'enterprise').required().messages({
-    'any.only': 'Plan must be one of: core, premium, enterprise',
+  planId: Joi.string().trim().min(2).max(50).required().messages({
     'any.required': 'Plan ID is required'
   }),
   cadenceMonths: Joi.number().integer().min(1).max(6).default(1).messages({
@@ -155,30 +156,23 @@ const productCreateSchema = Joi.object({
 const skuCreateSchema = Joi.object({
   skuCode: Joi.string().trim().min(2).max(50).required(),
   productId: Joi.string().trim().min(2).max(50).required(),
-  size: Joi.string().trim().min(1).max(20).required(),
-  color: Joi.string().trim().min(1).max(30).required(),
-  packCount: Joi.number().integer().min(1).max(99).default(1)
-});
-
-const consumableCreateSchema = Joi.object({
-  consumableId: Joi.string().trim().min(2).max(50).required(),
-  name: Joi.string().trim().min(2).max(120).required(),
-  category: Joi.string().trim().min(2).max(60).required(),
-  description: Joi.string().trim().max(1000).allow('').optional(),
-  tooltip: Joi.string().trim().max(200).allow('').optional(),
-  unitPrice: Joi.number().min(0).required(),
-  defaultCadenceMonths: Joi.number().integer().min(1).max(6).optional(),
-  allowedCadenceMonths: Joi.array().items(Joi.number().integer().min(1).max(6)).optional(),
-  tags: Joi.array().items(Joi.string().trim().lowercase()).optional()
+  size: Joi.string().trim().uppercase().valid(...STOIK_SIZES).required(),
+  color: Joi.string().trim().lowercase().valid(...STOIK_COLORS).required(),
+  packCount: Joi.number().integer().min(1).max(12).required()
+}).custom((value, helpers) => {
+  if (!isValidColorQuantity(value.color, value.packCount)) {
+    const allowed = getAllowedQuantities(value.color).join(', ');
+    return helpers.message(`packCount ${value.packCount} is invalid for ${value.color}. Allowed: ${allowed}`);
+  }
+  return value;
 });
 
 const checkoutItemSchema = Joi.object({
-  type: Joi.string().valid('plan', 'consumable').optional(),
-  planId: Joi.string().trim().min(2).max(50).optional(),
-  consumableId: Joi.string().trim().min(2).max(50).optional(),
-  quantity: Joi.number().integer().min(1).max(99).optional(),
+  type: Joi.string().valid('plan').optional(),
+  planId: Joi.string().trim().min(2).max(50).required(),
+  quantity: Joi.number().integer().valid(1).optional(),
   cadenceMonths: Joi.number().integer().min(1).max(6).optional()
-}).or('planId', 'consumableId');
+});
 
 const checkoutInitializeSchema = Joi.object({
   items: Joi.array().items(checkoutItemSchema).min(1).required(),
@@ -215,7 +209,6 @@ module.exports = {
     invoiceQuery: invoiceQuerySchema,
     productCreate: productCreateSchema,
     skuCreate: skuCreateSchema,
-    consumableCreate: consumableCreateSchema,
     checkoutInitialize: checkoutInitializeSchema
   }
 };

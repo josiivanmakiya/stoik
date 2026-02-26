@@ -7,7 +7,8 @@ const { sendError } = require('../utils/http');
 
 const router = express.Router();
 const normalizeSkuCode = (value) => String(value || '').trim().toUpperCase();
-const normalizeAttribute = (value) => String(value || '').trim();
+const normalizeSize = (value) => String(value || '').trim().toUpperCase();
+const normalizeColor = (value) => String(value || '').trim().toLowerCase();
 
 // Public: list active skus (optionally by productId)
 router.get('/', async (req, res) => {
@@ -48,9 +49,9 @@ router.post('/', authenticateToken, requireAdmin, validate(schemas.skuCreate), a
     const sku = await Sku.create({
       skuCode: normalizedSkuCode,
       productId: product._id,
-      size: normalizeAttribute(size),
-      color: normalizeAttribute(color),
-      packCount: packCount || 1
+      size: normalizeSize(size),
+      color: normalizeColor(color),
+      packCount: Number(packCount)
     });
     res.status(201).json(sku);
   } catch (err) {

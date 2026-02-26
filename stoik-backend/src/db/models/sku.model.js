@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { STOIK_COLORS, STOIK_SIZES } = require('../../config/constants.js');
+const { isValidColorQuantity } = require('../../domain/plans/planRules.js');
 
 const skuSchema = new mongoose.Schema({
   skuCode: {
@@ -10,9 +12,31 @@ const skuSchema = new mongoose.Schema({
     immutable: true
   },
   productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-  size: { type: String, required: true, trim: true, uppercase: true },
-  color: { type: String, required: true, trim: true, lowercase: true },
-  packCount: { type: Number, default: 1, min: 1 },
+  size: {
+    type: String,
+    required: true,
+    trim: true,
+    uppercase: true,
+    enum: STOIK_SIZES
+  },
+  color: {
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    enum: STOIK_COLORS
+  },
+  packCount: {
+    type: Number,
+    required: true,
+    min: 1,
+    validate: {
+      validator(value) {
+        return isValidColorQuantity(this.color, value);
+      },
+      message: 'packCount is not allowed for this color'
+    }
+  },
   isActive: { type: Boolean, default: true }
 }, {
   timestamps: true,

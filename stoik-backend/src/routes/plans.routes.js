@@ -42,14 +42,23 @@ router.get('/:planId', async (req, res) => {
 });
 
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
-  const { planId, name, monthlyPrice, unitsPerMonth, description } = req.body;
+  const { planId, name, color, monthlyQuantity, monthlyPrice, unitsPerMonth, description } = req.body;
 
-  if (!planId || !name || monthlyPrice === undefined || monthlyPrice === null) {
-    return res.status(400).json({ error: 'Missing required fields: planId, name, monthlyPrice' });
+  if (!planId || !name || !color || !monthlyQuantity || monthlyPrice === undefined || monthlyPrice === null) {
+    return res.status(400).json({ error: 'Missing required fields: planId, name, color, monthlyQuantity, monthlyPrice' });
   }
 
   try {
-    const plan = await createPlan({ planId, name, monthlyPrice, unitsPerMonth, description, includedSkus: req.body.includedSkus });
+    const plan = await createPlan({
+      planId,
+      name,
+      color,
+      monthlyQuantity,
+      monthlyPrice,
+      unitsPerMonth,
+      description,
+      includedSkus: req.body.includedSkus
+    });
     logger.info(LOG_ACTIONS.PLAN_CREATED, { planId: plan.planId });
     res.status(201).json(plan);
   } catch (err) {

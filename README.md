@@ -6,8 +6,7 @@ Minimalist subscription platform for consumables.
 
 ## Repo Structure
 - `stoik-backend/` — Express + MongoDB API.
-- `stoik-frontend/` — React frontend and static reference pages.
-- `docs/` — Product, brand, and prompt docs.
+- `stoik-frontend/` — React frontend app.
 
 ## Frontend
 - Main app: `stoik-frontend/react-app`

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@300;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @import "./variables.css";
 
 *,
@@ -9,12 +9,59 @@
 
 body {
   margin: 0;
-  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-family: "Inter", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   color: var(--ink);
   line-height: var(--lh-base);
-  background: var(--bg);
+  background-color: var(--bg);
   min-height: 100vh;
   text-rendering: optimizeLegibility;
+}
+
+.stoik-noise-shell {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f3f3f3, #e8e8e8);
+}
+
+.stoik-noise-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  filter: url(#stoikGrain);
+  opacity: 0.22;
+  mix-blend-mode: multiply;
+}
+
+.stoik-noise-shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.12;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.18) 0,
+      rgba(0, 0, 0, 0.18) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.12) 0,
+      rgba(0, 0, 0, 0.12) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  mix-blend-mode: multiply;
+}
+
+.stoik-noise-shell > * {
+  position: relative;
+  z-index: 2;
 }
 
 a {
@@ -46,10 +93,10 @@ button {
 }
 
 .title {
-  font-family: "Fraunces", serif;
-  font-weight: 500;
-  font-size: clamp(1.9rem, 1.7rem + 1.2vw, 2.8rem);
-  line-height: 1.08;
+  font-weight: 800;
+  font-size: clamp(2rem, 1.75rem + 1.4vw, 3.2rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   margin: var(--space-3) 0 var(--space-4);
 }
 

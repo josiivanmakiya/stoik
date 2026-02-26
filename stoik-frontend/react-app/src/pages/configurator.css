@@ -1,0 +1,183 @@
+.configurator__layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+.configurator__media {
+  background: #f5f5f5;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 420px;
+}
+
+.configurator__panel {
+  border: 1px solid var(--stroke);
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.configurator__price {
+  display: grid;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.configurator__price strong {
+  font-size: clamp(1.7rem, 1.3rem + 1.2vw, 2.2rem);
+}
+
+.configurator__price span {
+  color: var(--ink-muted);
+}
+
+.configurator__benefit {
+  border: 1px solid #d8dbe1;
+  border-radius: var(--radius-md);
+  background: #fafbfc;
+  padding: 14px;
+  margin-bottom: var(--space-4);
+  display: grid;
+  gap: 8px;
+}
+
+.configurator__benefit-label {
+  margin: 0;
+  font-size: 0.64rem;
+  letter-spacing: 0.24em;
+  font-weight: 700;
+  color: #8a8f98;
+}
+
+.configurator__benefit-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  color: #20242d;
+  font-family: "SFMono-Regular", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.88rem;
+}
+
+.configurator__benefit-credit {
+  margin: 2px 0 0;
+  color: #34c759;
+  font-weight: 700;
+}
+
+.configurator__benefit-note {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+}
+
+.configurator__steps {
+  margin: 0 0 var(--space-5);
+  padding-left: var(--space-5);
+  display: grid;
+  gap: var(--space-1);
+  color: var(--ink-muted);
+}
+
+.configurator__steps li.is-active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.configurator__section {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--stroke);
+  margin-top: var(--space-4);
+}
+
+.configurator__section h2 {
+  font-size: var(--text-md);
+  margin: 0 0 var(--space-3);
+}
+
+.configurator__set-grid {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.configurator__chip {
+  border: 1px solid var(--stroke);
+  background: #fff;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-1);
+  min-height: 48px;
+}
+
+.configurator__chip.is-selected,
+.configurator__small.is-selected {
+  border-color: var(--ink);
+  background: #f1f1f1;
+}
+
+.configurator__chip span {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+
+.configurator__row {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.configurator__inline {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.configurator__size-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.configurator__small {
+  min-height: 48px;
+  border: 1px solid var(--stroke);
+  background: #fff;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.configurator__qty {
+  min-width: 36px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.configurator__note {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+
+.configurator__actions {
+  margin-top: var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 960px) {
+  .configurator__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .configurator__media {
+    min-height: 280px;
+  }
+}

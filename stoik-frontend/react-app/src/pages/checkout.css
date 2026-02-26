@@ -83,12 +83,6 @@
   color: #ffffff;
 }
 
-.checkout-footnote {
-  margin-top: auto;
-  color: #8d95a3;
-  font-size: var(--text-xs);
-}
-
 .checkout-panel--light {
   background: #ffffff;
 }
@@ -188,6 +182,95 @@
   font-size: var(--text-sm);
 }
 
+.checkout-payment-breakdown {
+  border: 1px solid #d8dde6;
+  border-radius: var(--radius-md);
+  padding: 14px;
+  background: #fbfcfe;
+  display: grid;
+  gap: 8px;
+}
+
+.checkout-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-family: "SFMono-Regular", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: #1f2937;
+  font-size: 0.9rem;
+}
+
+.checkout-breakdown-row--credit-entry {
+  align-items: center;
+}
+
+.checkout-credit-check {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.checkout-credit-check input {
+  width: 14px;
+  height: 14px;
+}
+
+.checkout-breakdown-divider {
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.checkout-breakdown-row--credit {
+  color: #34c759;
+}
+
+.checkout-breakdown-row--due {
+  font-size: 0.95rem;
+  color: #0b1320;
+}
+
+.checkout-loop-discount {
+  margin: 2px 0 0;
+  font-weight: 600;
+  color: #101827;
+}
+
+.checkout-loop-note {
+  margin: 0;
+  color: #6b7280;
+  font-size: var(--text-xs);
+}
+
+.checkout-transparency {
+  border: 1px solid #e4e7ee;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  background: #ffffff;
+  display: grid;
+  gap: 8px;
+}
+
+.checkout-transparency h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.checkout-transparency p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.checkout-transparency a {
+  font-size: 0.86rem;
+  color: #0f172a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .checkout-status {
   margin: var(--space-1) 0 0;
   color: #475569;
@@ -225,5 +308,10 @@
 @media (max-width: 560px) {
   .checkout-grid-2 {
     grid-template-columns: 1fr;
+  }
+
+  .checkout-breakdown-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

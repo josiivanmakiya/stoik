@@ -7,6 +7,8 @@ const {
   getSubscriptionsByUserId,
   updateSubscriptionCadence
 } = require('./subscription.model.js');
+const Plan = require('../../db/models/plan.model.js');
+const { assertValidPlanDocument } = require('../plans/planRules.js');
 
 const { assertValidSubscriptionTransition } = require('./subscription.rules.js');
 
@@ -24,6 +26,10 @@ const subscribeUser = async function({
   cadenceMonths = 1,
   bagSnapshot = []
 }) {
+  const plan = await Plan.findOne({ planId: String(planId || '').trim().toLowerCase(), isActive: true });
+  if (!plan) throw new Error('Plan not found');
+  assertValidPlanDocument(plan, 'plan configuration');
+
   const normalizedCadence = clampCadence(cadenceMonths);
   const status = SUBSCRIPTION_STATUS.INACTIVE;
   const nextBillingDate = new Date(startDate);

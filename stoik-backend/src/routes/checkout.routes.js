@@ -1,11 +1,11 @@
 const express = require('express');
 const logger = require('../config/logger');
 const Plan = require('../db/models/plan.model.js');
-const Consumable = require('../db/models/consumable.model.js');
 const Order = require('../db/models/order.model.js');
 const { subscribeUser, activateSubscription } = require('../domain/subscription/subscription.service.js');
 const { validate, schemas } = require('../middleware/validation.middleware');
 const { sendError } = require('../utils/http');
+const { getPlanQuantity, isValidColorQuantity } = require('../domain/plans/planRules.js');
 
 const router = express.Router();
 
@@ -33,51 +33,29 @@ const normalizeItems = async (items = []) => {
   const seen = new Set();
 
   for (const raw of items) {
-    if (!raw) continue;
+    if (!raw || !raw.planId) continue;
 
-    const type = raw.type === 'consumable' || raw.consumableId ? 'consumable' : 'plan';
-
-    if (type === 'plan') {
-      if (!raw.planId) continue;
-      const key = `plan:${raw.planId}`;
-      if (seen.has(key)) continue;
-
-      const plan = await Plan.findOne({ planId: raw.planId, isActive: true });
-      if (!plan) continue;
-
-      const quantity = Math.max(1, Math.min(99, Number(raw.quantity) || 1));
-      normalized.push({
-        type: 'plan',
-        itemRef: plan.planId,
-        planId: plan.planId,
-        name: plan.name,
-        unitPrice: plan.monthlyPrice,
-        quantity,
-        cadenceMonths: clampCadence(raw.cadenceMonths || 1)
-      });
-      seen.add(key);
-      continue;
-    }
-
-    if (!raw.consumableId) continue;
-    const key = `consumable:${raw.consumableId}`;
+    const key = `plan:${raw.planId}`;
     if (seen.has(key)) continue;
 
-    const consumable = await Consumable.findOne({ consumableId: raw.consumableId, isActive: true });
-    if (!consumable) continue;
+    const plan = await Plan.findOne({ planId: raw.planId, isActive: true });
+    if (!plan) continue;
 
-    const quantity = Math.max(1, Math.min(99, Number(raw.quantity) || 1));
+    const monthlyQuantity = getPlanQuantity(plan);
+    if (!isValidColorQuantity(plan.color, monthlyQuantity)) continue;
+
     normalized.push({
-      type: 'consumable',
-      itemRef: consumable.consumableId,
-      consumableId: consumable.consumableId,
-      name: consumable.name,
-      category: consumable.category,
-      tooltip: consumable.tooltip,
-      unitPrice: consumable.unitPrice,
-      quantity,
-      cadenceMonths: clampCadence(raw.cadenceMonths || consumable.defaultCadenceMonths || 1)
+      type: 'plan',
+      itemRef: plan.planId,
+      planId: plan.planId,
+      name: plan.name,
+      color: plan.color,
+      unitPrice: plan.monthlyPrice,
+      quantity: 1,
+      unitsPerMonth: monthlyQuantity,
+      cadenceMonths: clampCadence(raw.cadenceMonths || 1)
     });
+
     seen.add(key);
   }
 
@@ -131,9 +109,10 @@ const createOrAttachSubscription = async (order) => {
       type: item.type,
       itemRef: item.itemRef,
       planId: item.planId,
-      consumableId: item.consumableId,
+      color: item.color,
       name: item.name,
       quantity: item.quantity,
+      unitsPerMonth: item.unitsPerMonth,
       unitPrice: item.unitPrice,
       cadenceMonths: clampCadence(item.cadenceMonths || order.cadenceMonths || 1)
     }))
@@ -165,6 +144,10 @@ router.post('/initialize', validate(schemas.checkoutInitialize), async (req, res
       return res.status(400).json({ error: 'Customer email is required' });
     }
 
+    if (paymentMethod === 'standard' && req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required', code: 'AUTH_ADMIN_REQUIRED' });
+    }
+
     const total = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
     const amount = toKobo(total);
     const reference = `stoik_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
@@ -194,9 +177,6 @@ router.post('/initialize', validate(schemas.checkoutInitialize), async (req, res
     });
 
     if (paymentMethod === 'standard') {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ error: 'Admin access required', code: 'AUTH_ADMIN_REQUIRED' });
-      }
       const subscriptionId = await createOrAttachSubscription(order);
       return res.json({
         authorization_url: `${FRONTEND_URL}/success?reference=${reference}`,
