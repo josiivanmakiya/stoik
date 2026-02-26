@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 
 const AuthContext = createContext(null);
-const PREVIEW_AUTH = true;
+const PREVIEW_AUTH = import.meta.env.VITE_PREVIEW_AUTH === 'true';
 const PREVIEW_USER = {
   id: '000000000000000000000001',
   _id: '000000000000000000000001',

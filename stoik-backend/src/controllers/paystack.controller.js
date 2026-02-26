@@ -38,7 +38,7 @@ const createPlan = async (req, res) => {
 
 const initializeSubscription = async (req, res) => {
   try {
-    const userId = req.user?.id || req.body.userId;
+    const userId = req.user?.id || req.user?._id;
     const { email, planId } = req.body;
     const defaultPlanCode = process.env.PAYSTACK_DEFAULT_PLAN_CODE;
 
@@ -211,7 +211,7 @@ const paystackWebhook = async (req, res) => {
 
 const cancelSubscription = async (req, res) => {
   try {
-    const userId = req.user?.id || req.body.userId;
+    const userId = req.user?.id || req.user?._id;
     const { subscriptionCode, emailToken } = req.body;
 
     if (!subscriptionCode || !emailToken) {

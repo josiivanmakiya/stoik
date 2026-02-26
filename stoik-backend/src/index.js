@@ -16,6 +16,7 @@ const {
   checkoutRateLimit
 } = require('./middleware/security.middleware');
 const { SECURITY_DEFAULTS } = require('./config/constants.js');
+const { assertPaystackEnv } = require('./config/paystack.js');
 
 // Database connection
 const { connectDB } = require('./db/connection.js');
@@ -201,6 +202,10 @@ app.use((err, req, res, next) => {
 // Connect to database and start server
 const startServer = async () => {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      assertPaystackEnv();
+    }
+
     // Connect to MongoDB
     await connectDB();
     logger.info('Connected to MongoDB successfully');

@@ -170,7 +170,7 @@ const skuCreateSchema = Joi.object({
 const checkoutItemSchema = Joi.object({
   type: Joi.string().valid('plan').optional(),
   planId: Joi.string().trim().min(2).max(50).required(),
-  quantity: Joi.number().integer().valid(1).optional(),
+  quantity: Joi.number().integer().min(1).max(99).optional(),
   cadenceMonths: Joi.number().integer().min(1).max(6).optional()
 });
 

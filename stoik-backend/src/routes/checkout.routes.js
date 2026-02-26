@@ -20,6 +20,11 @@ const clampCadence = (value) => {
   if (!Number.isFinite(parsed)) return 1;
   return Math.min(6, Math.max(1, Math.round(parsed)));
 };
+const clampQuantity = (value) => {
+  const parsed = Number(value || 1);
+  if (!Number.isFinite(parsed)) return 1;
+  return Math.min(99, Math.max(1, Math.round(parsed)));
+};
 
 const normalizePaymentMethod = (value) => (value === 'standard' ? 'standard' : 'card');
 const deriveSubscriptionCadence = (items = [], fallback = 1) => {
@@ -30,19 +35,30 @@ const deriveSubscriptionCadence = (items = [], fallback = 1) => {
 
 const normalizeItems = async (items = []) => {
   const normalized = [];
-  const seen = new Set();
+  const indexByPlanId = new Map();
 
   for (const raw of items) {
     if (!raw || !raw.planId) continue;
-
-    const key = `plan:${raw.planId}`;
-    if (seen.has(key)) continue;
 
     const plan = await Plan.findOne({ planId: raw.planId, isActive: true });
     if (!plan) continue;
 
     const monthlyQuantity = getPlanQuantity(plan);
     if (!isValidColorQuantity(plan.color, monthlyQuantity)) continue;
+    const quantity = clampQuantity(raw.quantity || 1);
+    const existingIndex = indexByPlanId.get(plan.planId);
+
+    if (typeof existingIndex === 'number') {
+      const existing = normalized[existingIndex];
+      const nextQuantity = clampQuantity(existing.quantity + quantity);
+      normalized[existingIndex] = {
+        ...existing,
+        quantity: nextQuantity,
+        unitsPerMonth: monthlyQuantity * nextQuantity,
+        cadenceMonths: clampCadence(raw.cadenceMonths || existing.cadenceMonths || 1)
+      };
+      continue;
+    }
 
     normalized.push({
       type: 'plan',
@@ -51,12 +67,12 @@ const normalizeItems = async (items = []) => {
       name: plan.name,
       color: plan.color,
       unitPrice: plan.monthlyPrice,
-      quantity: 1,
-      unitsPerMonth: monthlyQuantity,
+      quantity,
+      unitsPerMonth: monthlyQuantity * quantity,
       cadenceMonths: clampCadence(raw.cadenceMonths || 1)
     });
 
-    seen.add(key);
+    indexByPlanId.set(plan.planId, normalized.length - 1);
   }
 
   return normalized;
