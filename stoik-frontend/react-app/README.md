@@ -20,11 +20,13 @@ It keeps the app readable and scalable:
 
 If you add new pages, export them in `src/pages/index.js` for consistent imports.
 
-## Backend Switch (Next Week)
-When the backend is ready:
-1. Set `USE_MOCK = false` in `src/services/config.js`.
-2. Create `stoik-frontend/react-app/.env` with:
+## Backend Switch
+This frontend reads the API URL from `VITE_API_URL`.
+
+Create `stoik-frontend/react-app/.env` with:
 ```
 VITE_API_URL=http://localhost:3002/v1
+VITE_PREVIEW_AUTH=false
 ```
-3. Restart the dev server.
+
+Then restart the dev server.

@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: stoik-backend
+    runtime: node
+    rootDir: stoik-backend
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: AUTH_BYPASS
+        value: "false"
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_DEFAULT_PLAN_CODE
+        sync: false
+      - key: PAYSTACK_CALLBACK_URL
+        sync: false
+
+  - type: static
+    name: stoik-frontend
+    rootDir: stoik-frontend/react-app
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_PREVIEW_AUTH
+        value: "false"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
