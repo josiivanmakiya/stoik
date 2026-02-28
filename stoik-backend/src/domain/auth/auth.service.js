@@ -3,7 +3,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../../db/models/user.model.js');
 const { getUserById } = require('../user/user.service.js');
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  (process.env.NODE_ENV === 'production' ? null : 'demo-insecure-jwt-secret');
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 const INVALID_CREDENTIALS_ERROR = 'Invalid email or password';
 

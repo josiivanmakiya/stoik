@@ -206,9 +206,14 @@ const startServer = async () => {
       assertPaystackEnv();
     }
 
-    // Connect to MongoDB
-    await connectDB();
-    logger.info('Connected to MongoDB successfully');
+    const skipDb = process.env.SKIP_DB === 'true';
+    if (skipDb) {
+      logger.warn('SKIP_DB=true: starting server without MongoDB connection (demo mode)');
+    } else {
+      // Connect to MongoDB
+      await connectDB();
+      logger.info('Connected to MongoDB successfully');
+    }
 
     // Start Express server
     app.listen(PORT, () => {
@@ -219,6 +224,7 @@ const startServer = async () => {
       });
     });
   } catch (error) {
+    console.error('Failed to start server:', error);
     logger.error('Failed to start server', { error: error.message, stack: error.stack });
     process.exit(1);
   }
