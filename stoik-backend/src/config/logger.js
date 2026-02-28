@@ -5,8 +5,15 @@ const fs = require('fs');
 
 // Create logs directory if it doesn't exist
 const logsDir = path.join(__dirname, '../../logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
+let fileLoggingEnabled = true;
+try {
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
+} catch (error) {
+  fileLoggingEnabled = false;
+  // Fallback to console-only logging when filesystem is restricted.
+  console.error('File logging disabled:', error.message);
 }
 
 // Define log format
@@ -39,52 +46,53 @@ const consoleTransport = new winston.transports.Console({
   )
 });
 
-// File transport for all logs
-const fileTransport = new DailyRotateFile({
-  filename: path.join(logsDir, 'stoik-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD',
-  maxSize: '20m',
-  maxFiles: '14d',
-  level: 'info',
-  format: logFormat
-});
-
-// Error file transport
-const errorFileTransport = new DailyRotateFile({
-  filename: path.join(logsDir, 'stoik-error-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD',
-  maxSize: '20m',
-  maxFiles: '30d',
-  level: 'error',
-  format: logFormat
-});
+const fileTransports = fileLoggingEnabled
+  ? [
+      new DailyRotateFile({
+        filename: path.join(logsDir, 'stoik-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        maxSize: '20m',
+        maxFiles: '14d',
+        level: 'info',
+        format: logFormat
+      }),
+      new DailyRotateFile({
+        filename: path.join(logsDir, 'stoik-error-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        maxSize: '20m',
+        maxFiles: '30d',
+        level: 'error',
+        format: logFormat
+      })
+    ]
+  : [];
 
 // Create logger instance
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
-  transports: [
-    consoleTransport,
-    fileTransport,
-    errorFileTransport
-  ],
+  transports: [consoleTransport, ...fileTransports],
   // Handle uncaught exceptions
-  exceptionHandlers: [
-    new DailyRotateFile({
-      filename: path.join(logsDir, 'stoik-exceptions-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      maxSize: '20m',
-      maxFiles: '30d'
-    })
-  ],
+  exceptionHandlers: fileLoggingEnabled
+    ? [
+        new DailyRotateFile({
+          filename: path.join(logsDir, 'stoik-exceptions-%DATE%.log'),
+          datePattern: 'YYYY-MM-DD',
+          maxSize: '20m',
+          maxFiles: '30d'
+        })
+      ]
+    : [consoleTransport],
   // Handle unhandled promise rejections
-  rejectionHandlers: [
-    new DailyRotateFile({
-      filename: path.join(logsDir, 'stoik-rejections-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      maxSize: '20m',
-      maxFiles: '30d'
-    })
-  ]
+  rejectionHandlers: fileLoggingEnabled
+    ? [
+        new DailyRotateFile({
+          filename: path.join(logsDir, 'stoik-rejections-%DATE%.log'),
+          datePattern: 'YYYY-MM-DD',
+          maxSize: '20m',
+          maxFiles: '30d'
+        })
+      ]
+    : [consoleTransport]
 });
 
 // Add request ID to logger context
