@@ -1,69 +1,45 @@
-import { Link } from 'react-router-dom';
-import StoikLogo from './StoikLogo.jsx';
-import './footer.css';
+import { Link } from "react-router-dom"
+import "./footer.css"
 
 export default function Footer() {
   return (
-    <footer className="footer">
-      <section className="footer__trust">
-        <h3>The Stoik Standard</h3>
-        <div className="footer__trust-grid">
-          <article>
-            <h4>Priority Dispatch</h4>
-            <p>
-              Timed delivery around your cadence across Nigeria. Track every loop
-              from dispatch to doorstep.
-            </p>
-          </article>
-          <article>
-            <h4>Stoik ID Verification</h4>
-            <p>
-              NIN or BVN verification protects your account and ensures credits
-              are tied to one verified member.
-            </p>
-          </article>
-          <article>
-            <h4>Buy-Back Guarantee</h4>
-            <p>
-              Return worn Stoik garments during delivery pickup. Credits apply
-              automatically to your next billing cycle.
-            </p>
-          </article>
-        </div>
-      </section>
-
-      <div className="footer__wrap">
+    <>
+      <footer>
         <div>
-          <div className="footer__logo">
-            <StoikLogo size={32} />
-            <span>stoik</span>
-          </div>
-          <p>Decision-free wardrobe utility.</p>
+          <Link to="/" className="ft-logo">Stoik</Link>
+          <p className="ft-tag">Inner wear, handled.<br />Lagos-built. Nigeria-wide.<br />The men who know, know.</p>
         </div>
-
-        <div className="footer__col">
-          <span>Product</span>
-          <Link to="/configure">The Playlist</Link>
-          <Link to="/shop">Shop</Link>
-          <Link to="/credit">Stoik Credits</Link>
+        <div>
+          <div className="ft-h">Product</div>
+          <ul className="ft-ul">
+            <li><Link to="/shop">Shop</Link></li>
+            <li><Link to="/configure">Configure</Link></li>
+            <li><Link to="/credits">Credits</Link></li>
+            <li><Link to="/how-it-works">How It Works</Link></li>
+          </ul>
         </div>
-
-        <div className="footer__col">
-          <span>Utility</span>
-          <Link to="/configure">The 90-Day Loop</Link>
-          <Link to="/contact">Contact</Link>
-          <Link to="/bag">Member Bag</Link>
+        <div>
+          <div className="ft-h">Account</div>
+          <ul className="ft-ul">
+            <li><Link to="/auth">Login</Link></li>
+            <li><Link to="/auth?mode=signup">Sign Up</Link></li>
+            <li><Link to="/bag">My Bag</Link></li>
+            <li><Link to="/billing">Billing</Link></li>
+          </ul>
         </div>
-
-        <div className="footer__col">
-          <span>Official</span>
-          <Link to="/terms">Terms</Link>
-          <Link to="/privacy">Privacy</Link>
-          <Link to="/disclosure">Sustainability</Link>
+        <div>
+          <div className="ft-h">Legal</div>
+          <ul className="ft-ul">
+            <li><Link to="/terms">Terms</Link></li>
+            <li><Link to="/privacy">Privacy</Link></li>
+            <li><Link to="/contact">Contact</Link></li>
+          </ul>
         </div>
+      </footer>
+      <div className="ft-bar">
+        <span className="ft-copy">© 2026 Stoik. All rights reserved.</span>
+        <span className="ft-copy">Lagos · Nigeria · Est. 2026</span>
       </div>
-
-      <div className="footer__legal">© 2026 Stoik Utility. All rights reserved.</div>
-    </footer>
-  );
+    </>
+  )
 }

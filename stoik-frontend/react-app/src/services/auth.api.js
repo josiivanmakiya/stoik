@@ -1,36 +1,40 @@
-import { apiRequest } from './apiClient.js';
+const BASE = "http://localhost:3002/v1"
 
-const getSocialAuthUrl = (provider) => {
-  if (provider === 'google') return import.meta.env.VITE_GOOGLE_AUTH_URL;
-  if (provider === 'apple') return import.meta.env.VITE_APPLE_AUTH_URL;
-  return null;
-};
+export async function register({ firstName, lastName, email, password }) {
+  const res = await fetch(`${BASE}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fullName: `${firstName} ${lastName}`, email, password })
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.details ? data.details.map(d => d.message).join(". ") : data.error || "Registration failed")
+  return data
+}
 
-export const startSocialAuth = async (provider) => {
-  const normalized = String(provider || '').toLowerCase();
-  if (!['google', 'apple'].includes(normalized)) {
-    throw new Error('Unsupported social provider');
-  }
+export async function login({ email, password }) {
+  const res = await fetch(`${BASE}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || "Login failed")
+  return data
+}
 
-  const directUrl = getSocialAuthUrl(normalized);
-  if (!directUrl) {
-    throw new Error(`${normalized} auth is not configured`);
-  }
+export function saveSession(token, user) {
+  localStorage.setItem("stoik_token", token)
+  localStorage.setItem("stoik_user", JSON.stringify(user))
+}
 
-  window.location.href = directUrl;
-  return { redirectUrl: directUrl };
-};
+export function getSession() {
+  const token = localStorage.getItem("stoik_token")
+  const user  = localStorage.getItem("stoik_user")
+  if (!token || !user) return null
+  return { token, user: JSON.parse(user) }
+}
 
-export const login = async (payload) => {
-  return apiRequest('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  });
-};
-
-export const register = async (payload) => {
-  return apiRequest('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  });
-};
+export function clearSession() {
+  localStorage.removeItem("stoik_token")
+  localStorage.removeItem("stoik_user")
+}

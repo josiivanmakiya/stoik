@@ -1,0 +1,66 @@
+.db-wrap { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; padding-top: 0; }
+.db-side { background: #0a0a0a; border-right: 1px solid var(--border); padding: 40px 28px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.db-logo { font-family: var(--font-display); font-size: 18px; letter-spacing: .32em; color: var(--white); cursor: pointer; margin-bottom: 36px; transition: color .2s; }
+.db-logo:hover { color: var(--accent); }
+.db-member { margin-bottom: 36px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+.db-m-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: rgba(244,241,236,0.4); margin-bottom: 4px; }
+.db-m-num { font-family: var(--font-display); font-size: 38px; color: var(--accent); letter-spacing: .06em; line-height: 1; }
+.db-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.db-link { font-family: var(--font-mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: rgba(244,241,236,0.45); padding: 12px 14px; border: 1px solid transparent; transition: all .2s; font-weight: 600; }
+.db-link:hover { color: var(--white); border-color: var(--border); }
+.db-link.on { color: var(--white); border-color: var(--border-md); background: rgba(244,241,236,0.04); }
+.db-logout { font-family: var(--font-mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; background: none; border: 1px solid var(--border); color: rgba(244,241,236,0.3); padding: 11px 14px; margin-top: 24px; transition: all .2s; font-weight: 600; }
+.db-logout:hover { color: #c87878; border-color: #c87878; }
+.db-main { padding: 52px 48px; overflow-y: auto; }
+.db-page-title { font-family: var(--font-display); font-size: 42px; letter-spacing: .04em; color: #ffffff; margin-bottom: 8px; }
+.db-page-sub { font-size: 12px; color: rgba(244,241,236,0.5); letter-spacing: .04em; margin-bottom: 40px; font-weight: 500; }
+.db-card { border: 1px solid var(--border); padding: 24px; margin-bottom: 12px; }
+.db-card-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; font-weight: 700; }
+.db-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(244,241,236,0.04); font-size: 12px; }
+.db-row:last-child { border-bottom: none; }
+.db-row-k { color: rgba(244,241,236,0.5); font-weight: 500; }
+.db-row-v { color: #ffffff; font-weight: 600; }
+.db-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 32px; }
+.db-stat { border: 1px solid var(--border); padding: 22px; }
+.db-stat-v { font-family: var(--font-display); font-size: 44px; color: #ffffff; line-height: 1; margin-bottom: 6px; }
+.db-stat-l { font-family: var(--font-mono); font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: rgba(244,241,236,0.45); font-weight: 600; }
+.db-btn { font-family: var(--font-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; padding: 12px 22px; border: 1px solid var(--border-md); background: transparent; color: rgba(244,241,236,0.7); transition: all .2s; font-weight: 600; }
+.db-btn:hover { color: var(--white); border-color: var(--accent); }
+.db-btn.primary { background: var(--white); color: var(--black); border-color: var(--white); }
+.db-btn.primary:hover { background: var(--accent); border-color: var(--accent); }
+@media(max-width:960px){ .db-wrap{grid-template-columns:1fr;} .db-side{position:static;height:auto;} .db-main{padding:32px 20px;} }
+
+.cr-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(244,241,236,0.45);
+  font-weight: 700;
+}
+.cr-input {
+  background: var(--mid);
+  border: 1px solid var(--border);
+  padding: 11px 14px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--white);
+  outline: none;
+  width: 100%;
+  transition: border-color .2s;
+  font-weight: 500;
+}
+.cr-input:focus { border-color: var(--accent); }
+.cr-input option { background: var(--mid); }
+
+/* Grain on dashboard */
+.db-wrap::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: #0e0e0e;
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.35;
+  pointer-events: none;
+}

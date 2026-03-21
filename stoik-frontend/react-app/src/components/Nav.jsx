@@ -1,38 +1,43 @@
-import { NavLink } from 'react-router-dom';
-import StoikLogo from './StoikLogo.jsx';
-import './nav.css';
+import { useState, useEffect } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import "./nav.css"
 
 export default function Nav() {
-  const linkClass = ({ isActive }) => `nav__link${isActive ? ' is-active' : ''}`;
-  const shopLinkClass = ({ isActive }) => `nav__link nav__shop-link${isActive ? ' is-active' : ''}`;
+  const [scrolled, setScrolled] = useState(false)
+  const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40)
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   return (
-    <header className="nav">
-      <div className="nav__wrap">
-        <div className="nav__left">
-          <NavLink to="/" className="nav__logo">
-            <StoikLogo size={34} className="nav__logo-mark" />
-            <span>stoik</span>
-          </NavLink>
+    <>
+      <nav className={scrolled ? "scrolled" : ""}>
+        <Link to="/" className="logo">Stoik</Link>
+        <ul className="nav-links">
+          <li><Link to="/shop">Shop</Link></li>
+          <li><Link to="/configure">Configure</Link></li>
+          <li><Link to="/how-it-works">How It Works</Link></li>
+          <li><Link to="/credits">Credits</Link></li>
+        </ul>
+        <div className="nav-r">
+          <button className="btn-sm" onClick={() => navigate("/auth")}>Login</button>
+          <button className="btn-bag" onClick={() => navigate("/bag")}>Bag 0</button>
+          <button className="mob-tog" onClick={() => setOpen(!open)}>{open ? "✕" : "☰"}</button>
         </div>
-
-        <nav className="nav__center">
-          <NavLink to="/" className={linkClass}>Home</NavLink>
-          <NavLink to="/shop" className={shopLinkClass}>
-            <span>Shop</span>
-            <span className="nav__shop-swatch" aria-hidden="true" />
-          </NavLink>
-          <NavLink to="/contact" className={linkClass}>Contact</NavLink>
-          <NavLink to="/credit" className={linkClass}>Stoik Credits</NavLink>
-          <NavLink to="/billing" className={linkClass}>Billing</NavLink>
-          <NavLink to="/bag" className={linkClass}>Bag</NavLink>
-        </nav>
-
-        <div className="nav__right">
-          <NavLink to="/auth" className="nav__cta nav__cta--ghost">Login</NavLink>
-          <NavLink to="/auth" state={{ mode: 'register' }} className="nav__cta nav__cta--solid">Sign up</NavLink>
+      </nav>
+      {open && (
+        <div className="mob-menu">
+          <Link to="/shop" onClick={() => setOpen(false)}>Shop</Link>
+          <Link to="/configure" onClick={() => setOpen(false)}>Configure</Link>
+          <Link to="/how-it-works" onClick={() => setOpen(false)}>How It Works</Link>
+          <Link to="/credits" onClick={() => setOpen(false)}>Credits</Link>
+          <Link to="/auth" onClick={() => setOpen(false)}>Login</Link>
         </div>
-      </div>
-    </header>
-  );
+      )}
+    </>
+  )
 }

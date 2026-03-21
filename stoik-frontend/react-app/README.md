@@ -1,32 +1,16 @@
-# Stoik Frontend (React)
+# React + Vite
 
-## Structure
-- `src/pages/` — route-level pages (one file per page).
-- `src/components/` — shared UI components.
-- `src/assets/` — SVG and visual assets.
-- `src/styles/` — global styles + variables.
-- `src/services/` — mock and API helpers.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Why this layout
-It keeps the app readable and scalable:
-- Pages are easy to find and edit.
-- Shared components are centralized.
-- Assets and global styles are separated.
+Currently, two official plugins are available:
 
-## Conventions
-- Pages in `PascalCase.jsx`.
-- Page styles in `kebab-case.css`.
-- Components in `PascalCase.jsx`.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-If you add new pages, export them in `src/pages/index.js` for consistent imports.
+## React Compiler
 
-## Backend Switch
-This frontend reads the API URL from `VITE_API_URL`.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-Create `stoik-frontend/react-app/.env` with:
-```
-VITE_API_URL=http://localhost:3002/v1
-VITE_PREVIEW_AUTH=false
-```
+## Expanding the ESLint configuration
 
-Then restart the dev server.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

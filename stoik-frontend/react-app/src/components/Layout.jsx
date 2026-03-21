@@ -1,12 +1,15 @@
-import { Outlet } from 'react-router-dom';
-import { Nav, Footer } from './index.js';
+import { Outlet } from "react-router-dom"
+import Nav from "./Nav"
+import Footer from "./Footer"
 
 export default function Layout() {
   return (
-    <div className="stoik-noise-shell">
+    <>
       <Nav />
-      <Outlet />
+      <main>
+        <Outlet />
+      </main>
       <Footer />
-    </div>
-  );
+    </>
+  )
 }

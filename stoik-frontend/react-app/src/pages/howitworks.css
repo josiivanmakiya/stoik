@@ -1,0 +1,8 @@
+.hiw-section { padding-top: 100px; }
+.hiw-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; margin-top: 48px; }
+.hiw-card { padding: 34px 24px; border: 1px solid var(--border); transition: border-color .3s; }
+.hiw-card:hover { border-color: rgba(201,169,110,.28); }
+.hiw-n { font-family: var(--font-display); font-size: 52px; line-height: 1; color: rgba(245,242,237,.05); margin-bottom: 16px; }
+.hiw-title { font-size: 13px; letter-spacing: .04em; color: var(--white); margin-bottom: 8px; font-weight: 400; }
+.hiw-body { font-size: 11px; line-height: 1.85; color: var(--grey); letter-spacing: .03em; }
+@media(max-width:768px){ .hiw-grid{grid-template-columns:1fr;} }

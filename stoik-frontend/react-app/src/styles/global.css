@@ -1,164 +1,74 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Epilogue:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@300;400&display=swap");
 @import "./variables.css";
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
 body {
-  margin: 0;
-  font-family: "Inter", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-  color: var(--ink);
-  line-height: var(--lh-base);
-  background-color: var(--bg);
-  min-height: 100vh;
-  text-rendering: optimizeLegibility;
-}
-
-.stoik-noise-shell {
-  position: relative;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f3f3f3, #e8e8e8);
-}
-
-.stoik-noise-shell::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  filter: url(#stoikGrain);
-  opacity: 0.22;
-  mix-blend-mode: multiply;
-}
-
-.stoik-noise-shell::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.12;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.18) 0,
-      rgba(0, 0, 0, 0.18) 1px,
-      transparent 1px,
-      transparent 3px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.12) 0,
-      rgba(0, 0, 0, 0.12) 1px,
-      transparent 1px,
-      transparent 3px
-    );
-  mix-blend-mode: multiply;
-}
-
-.stoik-noise-shell > * {
-  position: relative;
-  z-index: 2;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-img {
-  max-width: 100%;
-  display: block;
-}
-
-button {
-  font-family: inherit;
-}
-
-.page {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: var(--space-7) var(--space-5) var(--space-8);
-}
-
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.24em;
-  font-size: var(--text-xs);
+  background-color: #0e0e0e;
+  color: #f4f1ec;
+  font-family: var(--font-body);
   font-weight: 600;
-  color: var(--ink-soft);
+  overflow-x: hidden;
+  position: relative;
+  isolation: isolate;
 }
+
+/* Dark grain */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: #0e0e0e;
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.45;
+}
+
+/* White grain splash */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.04;
+  mix-blend-mode: screen;
+  filter: invert(1);
+}
+
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; }
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+.tag::before { content: ""; width: 18px; height: 1px; background: var(--accent); }
 
 .title {
-  font-weight: 800;
-  font-size: clamp(2rem, 1.75rem + 1.4vw, 3.2rem);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  margin: var(--space-3) 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: clamp(44px,4.5vw,70px);
+  line-height: .94;
+  letter-spacing: .02em;
+  color: #ffffff;
 }
 
-.subtitle {
-  font-size: var(--text-lg);
-  color: var(--ink-muted);
-  max-width: 64ch;
-}
+h1,h2,h3,h4 { color: #ffffff; font-weight: 700; }
+p { color: #f0ece4; font-weight: 500; font-size: 14px; line-height: 1.9; }
+strong { color: #ffffff; font-weight: 800; }
+li { color: #f0ece4; font-weight: 500; }
+span { font-weight: inherit; }
 
-.grid {
-  display: grid;
-  gap: var(--space-5);
-}
-
-.grid-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.grid-3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-@media (max-width: 900px) {
-  .grid-2,
-  .grid-3 {
-    grid-template-columns: 1fr;
-  }
-}
-
-.fade-in {
-  animation: fadeIn 220ms ease both;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-@media (max-width: 700px) {
-  .page {
-    padding: var(--space-6) var(--space-4) var(--space-7);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 1ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 1ms !important;
-    scroll-behavior: auto !important;
-  }
-}
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity .8s ease, transform .8s ease; }
+.reveal.in { opacity: 1; transform: translateY(0); }
+section { padding: 100px 40px; }
+@media(max-width:768px){ section { padding: 72px 20px; } }

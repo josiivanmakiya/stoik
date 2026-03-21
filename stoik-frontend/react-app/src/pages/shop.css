@@ -1,42 +1,18 @@
-.shop-page {
-  background: #f2f2f2;
-  border-radius: 12px;
-  padding: 24px;
-  display: grid;
-  gap: 24px;
-}
-
-.shop-page__hero {
-  text-align: center;
-  padding: 32px 12px 0;
-}
-
-.shop-page__hero h1 {
-  margin: 0;
-  font-size: clamp(2rem, 1.7rem + 1.2vw, 2.8rem);
-  letter-spacing: -0.02em;
-}
-
-.shop-page__hero p {
-  margin: 10px 0 18px;
-  color: #666;
-}
-
-.shop-page__hero-image {
-  width: min(100%, 1020px);
-  border-radius: 14px;
-  border: 1px solid #e2e2e2;
-  background: #fff;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
-}
-
-.shop-page__foot {
-  text-align: center;
-}
-
-.shop-page__foot a {
-  color: #222;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
+.shop-section { padding-top: 100px; }
+.shop-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 48px; }
+.shop-note { font-size: 11px; color: var(--grey); letter-spacing: .04em; line-height: 1.8; text-align: right; }
+.shop-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; }
+.pc { position: relative; overflow: hidden; aspect-ratio: 3/4; }
+.pc-bg { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform .65s ease; }
+.pc:hover .pc-bg { transform: scale(1.04); }
+.pc-n { font-family: var(--font-display); font-size: clamp(46px,5vw,74px); letter-spacing: .07em; line-height: 1; transition: transform .4s; }
+.pc:hover .pc-n { transform: translateY(-8px); }
+.pc-t { font-family: var(--font-mono); font-size: 8px; letter-spacing: .2em; text-transform: uppercase; margin-top: 7px; opacity: .38; }
+.pc-ov { position: absolute; inset: 0; background: rgba(12,12,12,.85); opacity: 0; transition: opacity .35s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 28px; }
+.pc:hover .pc-ov { opacity: 1; }
+.pc-pr { font-family: var(--font-display); font-size: 34px; letter-spacing: .05em; }
+.pc-sz { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; color: var(--grey); }
+.pc-desc { font-size: 11px; color: var(--grey-lt); text-align: center; line-height: 1.65; letter-spacing: .03em; }
+.pc-btn { font-family: var(--font-mono); font-size: 10px; letter-spacing: .17em; text-transform: uppercase; padding: 12px 0; border: 1px solid var(--white); background: transparent; color: var(--white); transition: all .2s; width: 100%; text-align: center; }
+.pc-btn:hover { background: var(--white); color: var(--black); }
+@media(max-width:768px){ .shop-grid{grid-template-columns:1fr;} .shop-head{flex-direction:column;gap:16px;} .shop-note{text-align:left;} }

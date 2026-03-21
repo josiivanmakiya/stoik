@@ -1,17 +1,13 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
-import App from './App.jsx';
-import './styles/global.css';
-import { AuthProvider } from './context/AuthContext.jsx';
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import { BrowserRouter } from "react-router-dom"
+import "./styles/global.css"
+import App from "./App.jsx"
 
-createRoot(document.getElementById('root')).render(
-  <ChakraProvider value={defaultSystem}>
+createRoot(document.getElementById("root")).render(
+  <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <App />
     </BrowserRouter>
-  </ChakraProvider>
-);
+  </StrictMode>
+)

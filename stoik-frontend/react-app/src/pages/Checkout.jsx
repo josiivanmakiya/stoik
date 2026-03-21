@@ -1,464 +1,202 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import Button from '../components/Button.jsx';
-import { getBag, getSelectedBagsForSubscription, initiateCheckout } from '../services/bag.api.js';
-import { getCreditBalance } from '../services/credits.api.js';
-import { loadBillingPreferences, saveBillingPreferences } from '../services/billingPreferences.js';
-import './checkout.css';
+import { useState, useEffect, useRef } from "react"
+import { useNavigate } from "react-router-dom"
+import "./checkout.css"
 
-const MEMBER_CREDIT_CAP = 2500;
-const formatNaira = (value) => `₦${Number(value || 0).toLocaleString('en-NG')}`;
+const INTERVALS = [
+  { value: 1, label: "Every month" },
+  { value: 2, label: "Every 2 months" },
+  { value: 3, label: "Every 3 months", recommended: true },
+  { value: 4, label: "Every 4 months", discount: 5 },
+  { value: 5, label: "Every 5 months", discount: 7 },
+  { value: 6, label: "Every 6 months", discount: 10 },
+]
+
+const STATES = ["Lagos","Abuja","Rivers","Kano","Oyo","Kaduna","Enugu","Delta","Anambra","Ogun","Ondo","Osun","Kwara","Benue","Plateau","Cross River","Akwa Ibom","Imo","Abia","Edo","Ekiti","Kogi","Nasarawa","Niger","Sokoto","Zamfara","Kebbi","Jigawa","Bauchi","Gombe","Adamawa","Taraba","Borno","Yobe","Ebonyi","Bayelsa","FCT"]
 
 export default function Checkout() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [bag, setBag] = useState({ items: [], cadenceMonths: 1 });
-  const [selectedBags, setSelectedBags] = useState([]);
-  const [interval, setInterval] = useState(1);
-  const [method, setMethod] = useState('card');
-  const [purchaseType, setPurchaseType] = useState('recurring');
-  const [status, setStatus] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [vaultBalance, setVaultBalance] = useState(12500);
-  const [billingPrefs, setBillingPrefs] = useState(loadBillingPreferences());
-  const [applyCredit, setApplyCredit] = useState(true);
-  const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: 'NG',
-    cardHolderName: '',
-    cardNumber: '',
-    cardExpiry: '',
-    cardCvc: '',
-    standardBankName: '',
-    standardAccountName: '',
-    standardAccountNumber: '',
-    standardReference: ''
-  });
+  const navigate = useNavigate()
+  const [bag, setBag] = useState([])
+  const [interval, setInterval] = useState(3)
+  const [autoRenew, setAutoRenew] = useState(true)
+  const [applyCredit, setApplyCredit] = useState(false)
+  const [creditBalance] = useState(0)
+  const [payMethod, setPayMethod] = useState("card")
+  const [form, setForm] = useState({ fullName:"", email:"", phone:"", address:"", city:"", state:"Lagos" })
+  const revealRefs = useRef([])
 
   useEffect(() => {
-    Promise.all([getBag(), getSelectedBagsForSubscription(), getCreditBalance()]).then(([activeBag, pickedBags, credit]) => {
-      setBag(activeBag);
-      setSelectedBags(Array.isArray(pickedBags) ? pickedBags : []);
-      setInterval(Number(activeBag?.cadenceMonths) || 1);
-      setVaultBalance(Number(credit?.balance || 0));
+    const saved = localStorage.getItem("stoik_bag")
+    if (saved) setBag(JSON.parse(saved))
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); obs.unobserve(e.target) } }),
+      { threshold: .08 }
+    )
+    revealRefs.current.forEach(el => el && obs.observe(el))
+    return () => obs.disconnect()
+  }, [])
 
-      const stored = loadBillingPreferences();
-      const merged = saveBillingPreferences({
-        ...stored,
-        autoApplyCredits: typeof credit?.autoApplyCredits === 'boolean' ? credit.autoApplyCredits : stored.autoApplyCredits
-      });
-      setBillingPrefs(merged);
-      setApplyCredit(merged.autoApplyCredits);
-    });
+  const r = (i) => (el) => { revealRefs.current[i] = el }
 
-    const params = new URLSearchParams(location.search);
-    const mode = params.get('mode');
-    if (mode === 'once') {
-      setPurchaseType('once');
+  const activeInterval = INTERVALS.find(i => i.value === interval)
+  const subtotal = bag.reduce((sum, item) => sum + item.price, 0)
+  const discountPct = activeInterval?.discount || 0
+  const discountAmt = Math.round(subtotal * discountPct / 100)
+  const creditAmt = applyCredit ? Math.min(creditBalance, subtotal - discountAmt) : 0
+  const total = Math.max(0, subtotal - discountAmt - creditAmt)
+
+  function upd(k, v) { setForm(f => ({ ...f, [k]: v })) }
+
+  function handleSubmit() {
+    if (!form.fullName || !form.email || !form.address || !form.city) {
+      alert("Please fill in all required fields.")
+      return
     }
-
-    try {
-      const storedUser = JSON.parse(localStorage.getItem('stoik_user') || 'null');
-      if (storedUser) {
-        setForm((prev) => ({
-          ...prev,
-          fullName: storedUser.fullName || prev.fullName,
-          email: storedUser.email || prev.email
-        }));
-      }
-    } catch (error) {
-      // ignore
+    const payload = {
+      items: bag.map(item => ({ planId: item.color + "-1", quantity: item.qty, cadenceMonths: interval })),
+      cadenceMonths: interval,
+      paymentMethod: payMethod === "card" ? "card" : "standard",
+      customer: { email: form.email, fullName: form.fullName, phone: form.phone },
+      shipping: { address: form.address, city: form.city, state: form.state, country: "NG" },
+      applyCredit,
+      creditToApply: creditAmt,
+      billingPreferences: { automaticRenewal: autoRenew, autoApplyCredits: applyCredit }
     }
-  }, []);
-
-  const checkoutBags = selectedBags.length ? selectedBags : [bag];
-  const checkoutItems = checkoutBags.flatMap((entry) => (
-    Array.isArray(entry?.items) ? entry.items.map((item) => ({ ...item, bagId: entry.bagId })) : []
-  ));
-  const hasItems = checkoutItems.length > 0;
-  const subtotal = checkoutItems.reduce((sum, item) => sum + (Number(item?.unitPrice || 0) * Number(item?.quantity || 1)), 0);
-  const availableCredit = Math.min(MEMBER_CREDIT_CAP, vaultBalance, subtotal);
-  const appliedCredit = applyCredit ? availableCredit : 0;
-  const totalDue = Math.max(0, subtotal - appliedCredit);
-
-  const cardDetailsReady = Boolean(
-    form.cardNumber.trim() &&
-    form.cardExpiry.trim() &&
-    form.cardCvc.trim() &&
-    form.cardHolderName.trim()
-  );
-  const bankDetailsReady = Boolean(
-    form.standardAccountName.trim() &&
-    form.standardBankName.trim() &&
-    form.standardAccountNumber.trim()
-  );
-  const ussdDetailsReady = Boolean(form.phone.trim());
-  const paymentDetailsReady = method === 'card'
-    ? cardDetailsReady
-    : method === 'bank'
-      ? bankDetailsReady
-      : ussdDetailsReady;
-  const contactReady = Boolean(form.fullName.trim() && form.email.trim() && form.address.trim());
-  const canContinue = hasItems && !submitting && paymentDetailsReady && contactReady;
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSwitchManualApproval = (event) => {
-    event.preventDefault();
-    const next = saveBillingPreferences({ ...billingPrefs, automaticRenewal: false });
-    setBillingPrefs(next);
-    navigate('/billing');
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!hasItems) {
-      setStatus('Your bag is empty.');
-      return;
-    }
-    if (!contactReady) {
-      setStatus('Complete full name, email, and address before continuing.');
-      return;
-    }
-    if (!paymentDetailsReady) {
-      setStatus('Complete payment details for the selected method.');
-      return;
-    }
-
-    const normalizedMethod = method === 'card' ? 'card' : 'standard';
-
-    setSubmitting(true);
-    setStatus(normalizedMethod === 'card' ? 'Initializing card checkout...' : 'Creating your subscription box...');
-
-    try {
-      const payload = {
-        items: checkoutItems.map((item) => ({
-          ...item,
-          cadenceMonths: interval
-        })),
-        cadenceMonths: interval,
-        applyCredit,
-        creditToApply: appliedCredit,
-        billingPreferences: {
-          autoApplyCredits: billingPrefs.autoApplyCredits,
-          automaticRenewal: billingPrefs.automaticRenewal
-        },
-        bags: checkoutBags.map((entry) => ({
-          bagId: entry.bagId,
-          name: entry.name,
-          cadenceMonths: entry.cadenceMonths,
-          items: entry.items
-        })),
-        paymentMethod: normalizedMethod,
-        paymentDetails: method === 'card'
-          ? {
-              method,
-              cardHolderName: form.cardHolderName,
-              cardNumber: form.cardNumber,
-              cardExpiry: form.cardExpiry,
-              cardCvc: form.cardCvc
-            }
-          : {
-              method,
-              bankName: form.standardBankName,
-              accountName: form.standardAccountName,
-              accountNumber: form.standardAccountNumber,
-              reference: form.standardReference
-            },
-        customer: {
-          fullName: form.fullName,
-          email: form.email,
-          phone: form.phone
-        },
-        shipping: {
-          address: form.address,
-          city: form.city,
-          state: form.state,
-          zipCode: form.zipCode,
-          country: form.country
-        }
-      };
-
-      const response = await initiateCheckout(payload);
-      window.location.href = response.authorization_url;
-    } catch (error) {
-      setStatus('Checkout failed. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    console.log("Checkout payload:", payload)
+    alert("Checkout ready — connect Paystack to complete.")
+  }
 
   return (
-    <main className="page fade-in checkout-page">
-      <div className="checkout-shell">
-        <section className="checkout-panel checkout-panel--dark">
-          <div>
-            <div className="checkout-brand">Stoik</div>
-          </div>
-
-          <div className="checkout-interval-card">
-            <label htmlFor="checkout-interval" className="checkout-label">Contribution interval</label>
-            <select
-              id="checkout-interval"
-              value={interval}
-              onChange={(event) => setInterval(Number(event.target.value))}
-              className="checkout-select checkout-select--dark"
-              disabled={purchaseType === 'once'}
-            >
-              {[1, 2, 3, 4, 5, 6].map((months) => (
-                <option key={months} value={months}>
-                  Every {months} month{months > 1 ? 's' : ''}
-                </option>
-              ))}
-            </select>
-            <p className="checkout-muted">
-              {purchaseType === 'once'
-                ? 'This is a one-time purchase.'
-                : 'You will be charged automatically based on the interval you choose.'}
-            </p>
-          </div>
-
-          <div className="checkout-summary">
-            <div className="checkout-summary-row">
-              <span>Items in bag</span>
-              <strong>{checkoutItems.length}</strong>
-            </div>
-            <div className="checkout-summary-row">
-              <span>Bags selected</span>
-              <strong>{checkoutBags.length}</strong>
-            </div>
-            <div className="checkout-summary-row">
-              <span>Selected interval</span>
-              <strong>Every {interval} month{interval > 1 ? 's' : ''}</strong>
-            </div>
-            <div className="checkout-summary-row">
-              <span>Contribution model</span>
-              <strong>{purchaseType === 'once' ? 'One-time' : 'Recurring'}</strong>
-            </div>
-          </div>
-
-        </section>
-
-        <section className="checkout-panel checkout-panel--light">
-          <form className="checkout-form" onSubmit={handleSubmit}>
-            <div className="checkout-mode" role="group" aria-label="Purchase mode">
-              <button
-                type="button"
-                className={`checkout-mode__btn ${purchaseType === 'once' ? 'is-active' : ''}`}
-                onClick={() => setPurchaseType('once')}
-              >
-                Buy once
-              </button>
-              <button
-                type="button"
-                className={`checkout-mode__btn ${purchaseType === 'recurring' ? 'is-active' : ''}`}
-                onClick={() => setPurchaseType('recurring')}
-              >
-                Subscribe
-              </button>
-            </div>
-
-            <h2 className="checkout-title">Payment method</h2>
-
-            <div
-              className={`checkout-method ${method === 'card' ? 'is-active' : ''}`}
-              onClick={() => setMethod('card')}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') setMethod('card');
-              }}
-              role="button"
-              tabIndex={0}
-            >
-              <label className="checkout-method-label">
-                <input type="radio" checked={method === 'card'} readOnly />
-                Debit / Credit Card
-              </label>
-              {method === 'card' && (
-                <div className="checkout-method-fields">
-                  <input
-                    name="cardNumber"
-                    value={form.cardNumber}
-                    onChange={handleChange}
-                    placeholder="Card number"
-                    autoComplete="cc-number"
-                  />
-                  <div className="checkout-grid-2">
-                    <input
-                      name="cardExpiry"
-                      value={form.cardExpiry}
-                      onChange={handleChange}
-                      placeholder="MM / YY"
-                      autoComplete="cc-exp"
-                    />
-                    <input
-                      name="cardCvc"
-                      value={form.cardCvc}
-                      onChange={handleChange}
-                      placeholder="CVC"
-                      autoComplete="cc-csc"
-                    />
-                  </div>
-                  <input
-                    name="cardHolderName"
-                    value={form.cardHolderName}
-                    onChange={handleChange}
-                    placeholder="Cardholder name"
-                    autoComplete="cc-name"
-                  />
-                  <select
-                    name="country"
-                    value={form.country}
-                    onChange={handleChange}
-                    className="checkout-select"
-                  >
-                    <option value="NG">Nigeria</option>
-                  </select>
-                </div>
-              )}
-            </div>
-
-            <div
-              className={`checkout-method ${method === 'bank' ? 'is-active' : ''}`}
-              onClick={() => setMethod('bank')}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') setMethod('bank');
-              }}
-              role="button"
-              tabIndex={0}
-            >
-              <label className="checkout-method-label">
-                <input type="radio" checked={method === 'bank'} readOnly />
-                Bank Transfer
-              </label>
-              {method === 'bank' && (
-                <div className="checkout-method-fields">
-                  <input
-                    name="standardAccountName"
-                    value={form.standardAccountName}
-                    onChange={handleChange}
-                    placeholder="Full name"
-                  />
-                  <input
-                    name="standardBankName"
-                    value={form.standardBankName}
-                    onChange={handleChange}
-                    placeholder="Bank name"
-                  />
-                  <input
-                    name="standardAccountNumber"
-                    value={form.standardAccountNumber}
-                    onChange={handleChange}
-                    placeholder="Account number"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div
-              className={`checkout-method ${method === 'ussd' ? 'is-active' : ''}`}
-              onClick={() => setMethod('ussd')}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') setMethod('ussd');
-              }}
-              role="button"
-              tabIndex={0}
-            >
-              <label className="checkout-method-label">
-                <input type="radio" checked={method === 'ussd'} readOnly />
-                USSD
-              </label>
-              {method === 'ussd' && (
-                <p className="checkout-ussd-note">
-                  You will be shown a USSD code to approve this {purchaseType === 'once' ? 'one-time' : 'recurring'} payment.
-                </p>
-              )}
-            </div>
-
-            <h3 className="checkout-subtitle">Contact and delivery</h3>
-            <div className="checkout-contact-grid">
-              <input name="fullName" value={form.fullName} onChange={handleChange} placeholder="Full name" />
-              <input name="email" value={form.email} onChange={handleChange} placeholder="Email" type="email" />
-              <input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" type="tel" />
-              <input name="address" value={form.address} onChange={handleChange} placeholder="Address" />
-              <div className="checkout-grid-2">
-                <input name="city" value={form.city} onChange={handleChange} placeholder="City" />
-                <input name="state" value={form.state} onChange={handleChange} placeholder="State" />
-              </div>
-              <input name="zipCode" value={form.zipCode} onChange={handleChange} placeholder="Zip code" />
-            </div>
-
-            <section className="checkout-payment-breakdown" aria-label="Pre-payment summary">
-              <div className="checkout-breakdown-row">
-                <span>The Executive Playlist</span>
-                <strong>{formatNaira(subtotal)}</strong>
-              </div>
-              <div className="checkout-breakdown-row checkout-breakdown-row--credit-entry">
-                <span>Available Credit ({formatNaira(availableCredit)})</span>
-                <label className="checkout-credit-check">
-                  <input
-                    type="checkbox"
-                    checked={applyCredit}
-                    onChange={(event) => setApplyCredit(event.target.checked)}
-                  />
-                  <span>Apply to this order</span>
-                </label>
-              </div>
-              <div className="checkout-breakdown-divider" />
-              <div className="checkout-breakdown-row checkout-breakdown-row--credit">
-                <span>Member Credit Applied</span>
-                <strong>-{formatNaira(appliedCredit)}</strong>
-              </div>
-              <p className="checkout-loop-discount">Loop Discount: {formatNaira(appliedCredit)}</p>
-              <p className="checkout-loop-note">
-                {applyCredit
-                  ? 'Refining your next cycle with your Buy-Back credit.'
-                  : 'Buy-Back Value remains reserved in your Vault.'}
-              </p>
-              <div className="checkout-breakdown-row checkout-breakdown-row--due">
-                <span>Total Today</span>
-                <strong>{formatNaira(totalDue)}</strong>
-              </div>
-            </section>
-
-            <section className="checkout-transparency" aria-label="Billing choice">
-              <h4>Your Loop, Your Terms.</h4>
-              <p>
-                Stoik is built for your convenience. While we offer auto-billing for seamless freshness, you can toggle
-                <strong> Manual Approval </strong>
-                in your settings. We&apos;ll simply send you a 24-hour reminder before your next shipment.
-              </p>
-              <a href="/billing" onClick={handleSwitchManualApproval}>Switch to Manual Approval</a>
-            </section>
-
-            <Button type="submit" disabled={!canContinue}>
-              Confirm &amp; Pay
-            </Button>
-
-            {status ? <p className="checkout-status">{status}</p> : null}
-
-            <p className="checkout-legal">
-              {purchaseType === 'once'
-                ? 'By continuing, you authorize Stoik to charge you once for this order.'
-                : 'By continuing, you authorize Stoik to charge you automatically based on your selected interval until you cancel.'}
-            </p>
-
-            <div className="checkout-links">
-              <Link to="/bag">Back to bag</Link>
-              <Link to="/shop">Back to collections</Link>
-            </div>
-          </form>
-        </section>
+    <section className="ck-section">
+      <div className="reveal" ref={r(0)}>
+        <div className="tag">Checkout</div>
+        <h2 className="title">Almost done.</h2>
       </div>
-    </main>
-  );
+
+      <div className="ck-wrap">
+        {/* LEFT */}
+        <div className="ck-left">
+
+          {/* Interval */}
+          <div className="ck-block reveal" ref={r(1)}>
+            <div className="ck-hd">How often do you want a fresh pack?</div>
+            <div className="interval-grid">
+              {INTERVALS.map(iv => (
+                <button
+                  key={iv.value}
+                  className={`iv-btn ${interval === iv.value ? "on" : ""}`}
+                  onClick={() => setInterval(iv.value)}
+                >
+                  <span className="iv-label">{iv.label}</span>
+                  {iv.recommended && <span className="iv-badge">Recommended</span>}
+                  {iv.discount && <span className="iv-badge disc">{iv.discount}% off</span>}
+                </button>
+              ))}
+            </div>
+            <p className="iv-note">
+              {autoRenew ? "Charged automatically on your chosen schedule." : "We'll remind you 24 hours before each cycle."}
+            </p>
+          </div>
+
+          {/* Billing model */}
+          <div className="ck-block reveal" ref={r(2)}>
+            <div className="ck-hd">Billing preference</div>
+            <div className="model-row">
+              <button className={`model-btn ${autoRenew ? "on" : ""}`} onClick={() => setAutoRenew(true)}>
+                <div className="model-n">Auto billing</div>
+                <div className="model-d">Charged automatically. Nothing to do.</div>
+              </button>
+              <button className={`model-btn ${!autoRenew ? "on" : ""}`} onClick={() => setAutoRenew(false)}>
+                <div className="model-n">Manual approval</div>
+                <div className="model-d">We remind you 24 hours before. You approve.</div>
+              </button>
+            </div>
+          </div>
+
+          {/* Payment method */}
+          <div className="ck-block reveal" ref={r(3)}>
+            <div className="ck-hd">Payment method</div>
+            <div className="pay-row">
+              {[
+                { id:"card",  label:"Debit / Credit Card" },
+                { id:"bank",  label:"Bank Transfer" },
+                { id:"ussd",  label:"USSD" },
+              ].map(p => (
+                <button key={p.id} className={`pay-btn ${payMethod === p.id ? "on" : ""}`} onClick={() => setPayMethod(p.id)}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Delivery */}
+          <div className="ck-block reveal" ref={r(4)}>
+            <div className="ck-hd">Contact & delivery</div>
+            <div className="form-grid">
+              <div className="f-field full"><label className="f-lbl">Full Name</label><input className="f-in" placeholder="Your full name" value={form.fullName} onChange={e => upd("fullName", e.target.value)} /></div>
+              <div className="f-field"><label className="f-lbl">Email</label><input className="f-in" type="email" placeholder="you@example.com" value={form.email} onChange={e => upd("email", e.target.value)} /></div>
+              <div className="f-field"><label className="f-lbl">Phone</label><input className="f-in" placeholder="080XXXXXXXX" value={form.phone} onChange={e => upd("phone", e.target.value)} /></div>
+              <div className="f-field full"><label className="f-lbl">Delivery Address</label><input className="f-in" placeholder="Street address" value={form.address} onChange={e => upd("address", e.target.value)} /></div>
+              <div className="f-field"><label className="f-lbl">City</label><input className="f-in" placeholder="City" value={form.city} onChange={e => upd("city", e.target.value)} /></div>
+              <div className="f-field">
+                <label className="f-lbl">State</label>
+                <select className="f-in" value={form.state} onChange={e => upd("state", e.target.value)}>
+                  {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* RIGHT — Summary */}
+        <div className="ck-right reveal" ref={r(5)}>
+          <div className="ck-summary">
+            <div className="cs-title">Order Summary</div>
+
+            {bag.length === 0 ? (
+              <div className="cs-empty">Your bag is empty. <button onClick={() => navigate("/configure")}>Configure a pack →</button></div>
+            ) : (
+              bag.map((item, i) => (
+                <div className="cs-item" key={i}>
+                  <div className="cs-swatch" style={{ background: item.color === "white" ? "#e0dbd0" : item.color === "grey" ? "#4d4d4d" : "#141414" }} />
+                  <div className="cs-detail">
+                    <div className="cs-name">{item.color.charAt(0).toUpperCase() + item.color.slice(1)} · Size {item.size}</div>
+                    <div className="cs-qty">Qty {item.qty}</div>
+                  </div>
+                  <div className="cs-price">₦{item.price.toLocaleString()}</div>
+                </div>
+              ))
+            )}
+
+            <div className="cs-rows">
+              <div className="cs-row"><span>Subtotal</span><span>₦{subtotal.toLocaleString()}</span></div>
+              {discountAmt > 0 && <div className="cs-row disc"><span>Cycle discount ({discountPct}%)</span><span>−₦{discountAmt.toLocaleString()}</span></div>}
+              {creditAmt > 0 && <div className="cs-row disc"><span>Credits applied</span><span>−₦{creditAmt.toLocaleString()}</span></div>}
+              <div className="cs-total"><span>Total today</span><span>₦{total.toLocaleString()}</span></div>
+            </div>
+
+            {creditBalance > 0 && (
+              <div className="cs-credit">
+                <div className="cs-credit-top">
+                  <span>Stoik Credits — ₦{creditBalance.toLocaleString()} available</span>
+                  <button className="cs-credit-toggle" onClick={() => setApplyCredit(a => !a)}>
+                    {applyCredit ? "Remove" : "Apply"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button className="ck-submit" onClick={handleSubmit}>
+              {payMethod === "card" ? "Pay ₦" + total.toLocaleString() + " →" : "Confirm Order →"}
+            </button>
+
+            <p className="ck-note">
+              {autoRenew ? "Auto-billing active. Cancel anytime from your account." : "Manual approval on. We remind you before each cycle."}
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  )
 }

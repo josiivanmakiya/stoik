@@ -1,129 +1,139 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Button from '../components/Button.jsx';
-import Card from '../components/Card.jsx';
-import { clearBag, getBag, getBagTotal, removeFromBag, setBag as saveBag } from '../services/bag.api.js';
-import './cart.css';
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import "./bag.css"
 
-const formatCurrency = (value) => `₦${Number(value || 0).toLocaleString('en-NG')}`;
-const ALLOWED_COLORS = new Set(['white', 'black', 'grey']);
-
-const getItemRef = (item) => item.itemRef || item.planId;
+const PRICE = 4500
+const COLORS = {
+  white: { bg: "#e0dbd0", text: "#1a1a1a" },
+  grey:  { bg: "#4d4d4d", text: "#f0ece4" },
+  black: { bg: "#141414", text: "#f0ece4" },
+}
+const SIZES = ["S", "M", "L", "XL", "XXL"]
 
 export default function Bag() {
-  const [bag, setBagState] = useState({ items: [], cadenceMonths: 1 });
-  const [loading, setLoading] = useState(true);
-
-  const refresh = async () => {
-    const activeBag = await getBag();
-    const cleanItems = (activeBag.items || []).filter((item) => ALLOWED_COLORS.has(item.color));
-
-    if (cleanItems.length !== (activeBag.items || []).length) {
-      const cleanedBag = await saveBag(cleanItems, activeBag.cadenceMonths || 1);
-      setBagState(cleanedBag);
-    } else {
-      setBagState(activeBag);
-    }
-
-    setLoading(false);
-  };
+  const navigate  = useNavigate()
+  const [bag, setBag] = useState([])
 
   useEffect(() => {
-    refresh();
-  }, []);
+    const saved = localStorage.getItem("stoik_bag")
+    if (saved) setBag(JSON.parse(saved))
+  }, [])
 
-  const hasItems = (bag.items || []).length > 0;
-  const total = useMemo(() => getBagTotal(bag), [bag]);
+  function save(updated) {
+    setBag(updated)
+    localStorage.setItem("stoik_bag", JSON.stringify(updated))
+  }
 
-  const handleRemove = async (ref) => {
-    await removeFromBag(ref);
-    refresh();
-  };
+  function changeQty(index, delta) {
+    const updated = bag.map((item, i) => {
+      if (i !== index) return item
+      const newQty = Math.max(1, item.qty + delta)
+      return { ...item, qty: newQty, price: newQty * PRICE }
+    })
+    save(updated)
+  }
 
-  const handleQuantity = async (ref, value) => {
-    const parsed = Number(value);
-    const quantity = Number.isFinite(parsed) ? Math.min(99, Math.max(1, Math.round(parsed))) : 1;
-    const nextItems = (bag.items || []).map((item) => {
-      const currentRef = getItemRef(item);
-      if (currentRef !== ref) return item;
-      return { ...item, quantity };
-    });
-    await saveBag(nextItems, bag.cadenceMonths || 1);
-    refresh();
-  };
+  function changeSize(index, size) {
+    const updated = bag.map((item, i) => i === index ? { ...item, size } : item)
+    save(updated)
+  }
 
-  const handleClear = async () => {
-    await clearBag();
-    refresh();
-  };
+  function changeColor(index, color) {
+    const updated = bag.map((item, i) => i === index ? { ...item, color } : item)
+    save(updated)
+  }
+
+  function remove(index) {
+    save(bag.filter((_, i) => i !== index))
+  }
+
+  function clear() {
+    setBag([])
+    localStorage.removeItem("stoik_bag")
+  }
+
+  const total       = bag.reduce((s, i) => s + i.price, 0)
+  const totalPieces = bag.reduce((s, i) => s + i.qty,   0)
 
   return (
-    <main className="page fade-in cart">
-      <section>
-        <div className="eyebrow">Bag</div>
-        <h1 className="title">Black. White. Grey.</h1>
-        <p className="subtitle">Only STOIK undershirts in your bag.</p>
+    <section className="bag-section">
+      <div className="tag">Your Bag</div>
+      <h2 className="title">{bag.length === 0 ? "Nothing here yet." : "Your pack."}</h2>
 
-        <Card title="Your bag items" subtitle="Minimal drop only">
-          {loading ? <div className="cart__row">Loading bag...</div> : null}
+      {bag.length === 0 ? (
+        <div className="bag-empty">
+          <p>You haven't configured a pack yet.</p>
+          <button className="bag-cta" onClick={() => navigate("/configure")}>Build your pack →</button>
+        </div>
+      ) : (
+        <div className="bag-wrap">
 
-          {!loading && !hasItems ? (
-            <div className="cart__empty">
-              <p>Your bag is empty.</p>
-              <Link to="/shop" className="cart__link">Go to shop</Link>
-            </div>
-          ) : null}
+          {/* ITEMS */}
+          <div className="bag-items">
+            {bag.map((item, i) => (
+              <div className="bi" key={i}>
 
-          {!loading && hasItems
-            ? bag.items.map((item) => {
-                const ref = getItemRef(item);
-                return (
-                  <article className="cart__item" key={ref}>
-                    <div className={`cart__chip cart__chip--${item.color || 'grey'}`} />
-                    <div>
-                      <p className="cart__item-name">{item.name}</p>
-                      <p className="cart__item-meta">Undershirt</p>
-                    </div>
-                    <div className="cart__qty">
-                      <label htmlFor={`qty-${ref}`}>Qty</label>
-                      <input
-                        id={`qty-${ref}`}
-                        type="number"
-                        min="1"
-                        max="99"
-                        value={item.quantity || 1}
-                        onChange={(event) => handleQuantity(ref, event.target.value)}
+                {/* Swatch + colour picker */}
+                <div className="bi-left">
+                  <div className="bi-swatch" style={{ background: COLORS[item.color]?.bg, outline: item.color === "black" ? "1px solid rgba(245,242,237,.15)" : "none" }}>
+                    <span style={{ color: COLORS[item.color]?.text }}>{item.color.slice(0,3).toUpperCase()}</span>
+                  </div>
+                  <div className="bi-colors">
+                    {Object.keys(COLORS).map(c => (
+                      <button
+                        key={c}
+                        className={`bi-col ${item.color === c ? "on" : ""}`}
+                        style={{ background: COLORS[c].bg, outline: c === "black" ? "1px solid rgba(245,242,237,.12)" : "none" }}
+                        onClick={() => changeColor(i, c)}
                       />
-                    </div>
-                    <strong>{formatCurrency((item.unitPrice || 0) * (item.quantity || 1))}</strong>
-                    <button type="button" onClick={() => handleRemove(ref)}>Remove</button>
-                  </article>
-                );
-              })
-            : null}
-        </Card>
-      </section>
+                    ))}
+                  </div>
+                </div>
 
-      <aside className="cart__side">
-        <Card title="Order total" subtitle="Three-color essentials">
-          <div className="cart__summary-row">
-            <span>Items</span>
-            <strong>{(bag.items || []).length}</strong>
-          </div>
-          <div className="cart__summary-row">
-            <span>Total</span>
-            <strong>{formatCurrency(total)}</strong>
-          </div>
-        </Card>
+                {/* Details */}
+                <div className="bi-detail">
+                  <div className="bi-name">{item.color.charAt(0).toUpperCase() + item.color.slice(1)} Crew Neck</div>
 
-        <Link to="/checkout">
-          <Button disabled={!hasItems}>Checkout</Button>
-        </Link>
-        <Button type="button" variant="ghost" onClick={handleClear} disabled={!hasItems}>
-          Clear Bag
-        </Button>
-        <Link to="/shop" className="cart__link">Back to shop</Link>
-      </aside>
-    </main>
-  );
+                  {/* Size selector */}
+                  <div className="bi-sizes">
+                    {SIZES.map(s => (
+                      <button key={s} className={`bi-sz ${item.size === s ? "on" : ""}`} onClick={() => changeSize(i, s)}>{s}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Qty + price */}
+                <div className="bi-right">
+                  <div className="bi-qty">
+                    <button className="q-b" onClick={() => changeQty(i, -1)}>−</button>
+                    <div className="q-v">{item.qty}</div>
+                    <button className="q-b" onClick={() => changeQty(i, +1)}>+</button>
+                  </div>
+                  <div className="bi-price">₦{item.price.toLocaleString()}</div>
+                  <button className="bi-remove" onClick={() => remove(i)}>✕</button>
+                </div>
+
+              </div>
+            ))}
+
+            <div className="bag-actions">
+              <button className="bag-clear" onClick={clear}>Clear bag</button>
+              <button className="bag-add" onClick={() => navigate("/configure")}>+ Add more</button>
+            </div>
+          </div>
+
+          {/* SUMMARY */}
+          <div className="bag-summary">
+            <div className="bs-title">Summary</div>
+            <div className="bs-row"><span>Pieces</span><span>{totalPieces}</span></div>
+            <div className="bs-row"><span>Price per piece</span><span>₦{PRICE.toLocaleString()}</span></div>
+            <div className="bs-total"><span>Total</span><span>₦{total.toLocaleString()}</span></div>
+            <button className="bs-checkout" onClick={() => navigate("/checkout")}>Checkout →</button>
+            <p className="bs-note">Delivery schedule and billing set at checkout.</p>
+          </div>
+
+        </div>
+      )}
+    </section>
+  )
 }

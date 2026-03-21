@@ -1,0 +1,10 @@
+.nf-section { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 80px 40px; }
+.nf-inner { text-align: center; }
+.nf-num { font-family: var(--font-display); font-size: clamp(120px,18vw,220px); line-height: 1; color: rgba(244,241,236,0.06); letter-spacing: .06em; margin-bottom: -20px; }
+.nf-inner .title { margin-bottom: 16px; }
+.nf-body { font-size: 13px; color: rgba(244,241,236,0.65); letter-spacing: .06em; font-style: italic; margin-bottom: 36px; font-weight: 500; }
+.nf-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.nf-home { font-family: var(--font-mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; padding: 16px 32px; background: var(--white); color: var(--black); border: none; transition: background .2s; font-weight: 700; }
+.nf-home:hover { background: var(--accent); }
+.nf-shop { font-family: var(--font-mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; padding: 16px 32px; background: transparent; color: rgba(244,241,236,0.65); border: 1px solid var(--border); transition: all .2s; font-weight: 600; }
+.nf-shop:hover { color: var(--white); border-color: var(--border-md); }
